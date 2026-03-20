@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { breedingAPI, animalsAPI } from '../../utils/api';
+import Spinner from '../../components/common/Spinner';
 
 const defaultForm = {
   femaleAnimal: '', maleAnimal: '',
@@ -74,12 +75,12 @@ export default function BreedingRecords() {
       <div className="page-content">
 
         {/* Summary Cards */}
-        <div className="stats-grid" style={{ marginBottom: '24px' }}>
+        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '24px' }}>
           {[
-            { label: 'Total Records', value: records.length,                                         icon: '🧬', cls: 'purple' },
-            { label: 'Pending',       value: records.filter(r => r.outcome === 'Pending').length,    icon: '⏳', cls: 'orange' },
-            { label: 'Successful',    value: records.filter(r => r.outcome === 'Successful').length, icon: '✅', cls: 'green'  },
-            { label: 'Failed',        value: records.filter(r => r.outcome === 'Failed').length,     icon: '❌', cls: 'blue'   },
+            { label: 'Total Records', value: records.length,                                          icon: '🧬', cls: 'purple' },
+            { label: 'Pending',       value: records.filter(r => r.outcome === 'Pending').length,     icon: '⏳', cls: 'orange' },
+            { label: 'Successful',    value: records.filter(r => r.outcome === 'Successful').length,  icon: '✅', cls: 'green'  },
+            { label: 'Failed',        value: records.filter(r => r.outcome === 'Failed').length,      icon: '❌', cls: 'blue'   },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>

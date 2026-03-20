@@ -31,32 +31,38 @@ export default function Dashboard() {
           feedingAPI.getAll(),
         ]);
 
-        const animals = animalsRes.data.animals || [];
-        const feeding = feedRes.data.records    || [];
+        const animals  = animalsRes.data.animals  || [];
+        const feeding  = feedRes.data.records     || [];
 
         setStats({
           animals:      animalsRes.data.count || animals.length,
-          installments: instRes.data.installments?.length || 0,
-          vouchers:     vouchRes.data.vouchers?.length    || 0,
-          breeding:     breedRes.data.records?.length     || 0,
+          installments: instRes.data.installments?.length  || 0,
+          vouchers:     vouchRes.data.vouchers?.length     || 0,
+          breeding:     breedRes.data.records?.length      || 0,
         });
 
         setRecentAnimals(animals.slice(0, 5));
 
+        // Species breakdown for Pie chart
         const speciesCount = {};
         animals.forEach(a => { speciesCount[a.species] = (speciesCount[a.species] || 0) + 1; });
         setSpeciesData(Object.entries(speciesCount).map(([name, value]) => ({ name, value })));
 
+        // Health status for Bar chart
         const healthCount = { Healthy: 0, Sick: 0, Pregnant: 0, Sold: 0, Deceased: 0 };
         animals.forEach(a => { if (healthCount[a.status] !== undefined) healthCount[a.status]++; });
         setHealthData(Object.entries(healthCount).map(([name, value]) => ({ name, value })));
 
+        // Monthly feeding cost for Line chart
         const monthlyMap = {};
         feeding.forEach(r => {
           const month = new Date(r.feedingDate).toLocaleString('default', { month: 'short', year: '2-digit' });
           monthlyMap[month] = (monthlyMap[month] || 0) + (r.cost || 0);
         });
-        setFeedingData(Object.entries(monthlyMap).map(([month, cost]) => ({ month, cost })).slice(-6));
+        const sorted = Object.entries(monthlyMap)
+          .map(([month, cost]) => ({ month, cost }))
+          .slice(-6);
+        setFeedingData(sorted);
 
       } catch (e) {
         console.error(e);
@@ -103,7 +109,9 @@ export default function Dashboard() {
         </div>
 
         {/* Charts Row 1 */}
-        <div className="charts-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+
+          {/* Species Pie Chart */}
           <div className="card">
             <div className="card-header"><h3>🐄 Animals by Species</h3></div>
             <div className="card-body">
@@ -125,6 +133,7 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Health Status Bar Chart */}
           <div className="card">
             <div className="card-header"><h3>💚 Animal Health Status</h3></div>
             <div className="card-body">
@@ -153,7 +162,9 @@ export default function Dashboard() {
         </div>
 
         {/* Charts Row 2 */}
-        <div className="charts-grid">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
+
+          {/* Monthly Feeding Cost Line Chart */}
           <div className="card">
             <div className="card-header"><h3>💰 Monthly Feeding Cost (PKR)</h3></div>
             <div className="card-body">
@@ -176,12 +187,13 @@ export default function Dashboard() {
             </div>
           </div>
 
+          {/* Recent Animals */}
           <div className="card">
             <div className="card-header">
               <h3>Recent Animals</h3>
               <Link to="/my-animals" style={{ fontSize: '0.82rem', color: 'var(--primary)', textDecoration: 'none' }}>View all →</Link>
             </div>
-            <div style={{ padding: 0, overflowX: 'auto' }}>
+            <div style={{ padding: 0 }}>
               {loading ? <Spinner text="Loading..." /> : recentAnimals.length === 0 ? (
                 <div className="empty-state" style={{ padding: '30px' }}>
                   <div className="icon">🐄</div>
@@ -189,7 +201,7 @@ export default function Dashboard() {
                   <Link to="/my-animals" className="btn btn-primary btn-sm">Add your first animal</Link>
                 </div>
               ) : (
-                <table style={{ minWidth: '400px' }}>
+                <table>
                   <thead><tr><th>Animal</th><th>Species</th><th>Status</th></tr></thead>
                   <tbody>
                     {recentAnimals.map(a => (
@@ -213,7 +225,7 @@ export default function Dashboard() {
         <div className="card">
           <div className="card-header"><h3>⚡ Quick Actions</h3></div>
           <div className="card-body" style={{ padding: '16px' }}>
-            <div className="quick-actions-grid">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '12px' }}>
               {[
                 { to: '/my-animals',       icon: '🐄', label: 'My Animals',    desc: 'Manage livestock' },
                 { to: '/cattle',           icon: '🏪', label: 'Cattle Market', desc: 'Buy & sell' },
@@ -225,7 +237,10 @@ export default function Dashboard() {
                 { to: '/profile',          icon: '👤', label: 'Profile',       desc: 'Account' },
               ].map(link => (
                 <Link key={link.to} to={link.to} style={{ textDecoration: 'none' }}>
-                  <div className="quick-action-card">
+                  <div style={{ padding: '14px', borderRadius: '10px', border: '1.5px solid var(--border)', transition: 'all 0.2s', cursor: 'pointer', textAlign: 'center' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.background = '#f4faf5'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'white'; }}
+                  >
                     <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>{link.icon}</div>
                     <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{link.label}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{link.desc}</div>

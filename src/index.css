@@ -365,3 +365,75 @@ table {
     overflow-y: auto;
   }
 }
+/* ===== AUTH PAGES RESPONSIVE ===== */
+.auth-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.auth-left {
+  flex: 1;
+  background: linear-gradient(135deg, #2d6a4f, #40916c);
+  color: white;
+  padding: 60px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  overflow-y: auto;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (max-width: 768px) {
+  .auth-wrapper {
+    flex-direction: column;
+  }
+
+  .auth-left {
+    padding: 30px 24px;
+    flex: none;
+  }
+
+  .auth-left .features {
+    display: none;
+  }
+
+  .auth-right {
+    flex: 1;
+    padding: 30px 20px;
+    align-items: flex-start;
+  }
+
+  .auth-form {
+    max-width: 100%;
+  }
+
+  .auth-form .form-row {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-left {
+    padding: 20px 16px;
+  }
+
+  .auth-left .tagline {
+    font-size: 0.9rem;
+  }
+
+  .auth-right {
+    padding: 20px 16px;
+  }
+}
