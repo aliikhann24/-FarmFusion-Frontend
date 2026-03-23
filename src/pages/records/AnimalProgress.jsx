@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { progressAPI, animalsAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
-// ...
 
 const defaultForm = {
   animal: '',
@@ -73,8 +71,7 @@ export default function AnimalProgress() {
 
       <div className="page-content">
 
-        {/* Summary Stats */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginBottom: '24px' }}>
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Records',    value: records.length, icon: '📈', cls: 'green'  },
             { label: 'Avg Weight (kg)',  value: avgWeight,      icon: '⚖️', cls: 'blue'   },
@@ -91,7 +88,6 @@ export default function AnimalProgress() {
           ))}
         </div>
 
-        {/* Filter */}
         <div className="filter-bar">
           <select
             className="search-input"
@@ -108,7 +104,6 @@ export default function AnimalProgress() {
           </select>
         </div>
 
-        {/* Table */}
         <div className="card">
           {loading ? (
             <div className="empty-state"><p>Loading...</p></div>
@@ -163,7 +158,6 @@ export default function AnimalProgress() {
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -176,88 +170,59 @@ export default function AnimalProgress() {
                 <div className="form-row">
                   <div className="form-group">
                     <label>Animal *</label>
-                    <select
-                      value={form.animal}
-                      onChange={e => setForm(p => ({ ...p, animal: e.target.value }))}
-                      required
-                    >
+                    <select value={form.animal}
+                      onChange={e => setForm(p => ({ ...p, animal: e.target.value }))} required>
                       <option value="">Select animal</option>
                       {animals.map(a => (
-                        <option key={a._id} value={a._id}>
-                          {a.name || a.tagId} ({a.species})
-                        </option>
+                        <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
                       ))}
                     </select>
                   </div>
                   <div className="form-group">
                     <label>Date *</label>
-                    <input
-                      type="date"
-                      value={form.date}
-                      onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
-                      required
-                    />
+                    <input type="date" value={form.date}
+                      onChange={e => setForm(p => ({ ...p, date: e.target.value }))} required />
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Weight (kg)</label>
-                    <input
-                      type="number"
-                      value={form.weight}
+                    <input type="number" value={form.weight}
                       onChange={e => setForm(p => ({ ...p, weight: e.target.value }))}
-                      min="0" placeholder="0"
-                    />
+                      min="0" placeholder="0" />
                   </div>
                   <div className="form-group">
                     <label>Height (cm)</label>
-                    <input
-                      type="number"
-                      value={form.height}
+                    <input type="number" value={form.height}
                       onChange={e => setForm(p => ({ ...p, height: e.target.value }))}
-                      min="0" placeholder="0"
-                    />
+                      min="0" placeholder="0" />
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Milk Production (L/day)</label>
-                    <input
-                      type="number"
-                      value={form.milkProduction}
+                    <input type="number" value={form.milkProduction}
                       onChange={e => setForm(p => ({ ...p, milkProduction: e.target.value }))}
-                      min="0" placeholder="0"
-                    />
+                      min="0" placeholder="0" />
                   </div>
                   <div className="form-group">
                     <label>Health Status</label>
-                    <select
-                      value={form.healthStatus}
-                      onChange={e => setForm(p => ({ ...p, healthStatus: e.target.value }))}
-                    >
+                    <select value={form.healthStatus}
+                      onChange={e => setForm(p => ({ ...p, healthStatus: e.target.value }))}>
                       {['Excellent', 'Good', 'Fair', 'Poor'].map(h => (
                         <option key={h}>{h}</option>
                       ))}
                     </select>
                   </div>
                 </div>
-
                 <div className="form-group">
                   <label>Notes</label>
-                  <textarea
-                    value={form.notes}
+                  <textarea value={form.notes}
                     onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                    rows={3} style={{ resize: 'vertical' }}
-                    placeholder="Any observations..."
-                  />
+                    rows={3} style={{ resize: 'vertical' }} placeholder="Any observations..." />
                 </div>
-
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
-                    Cancel
-                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
                     {saving ? 'Saving...' : 'Add Progress'}
                   </button>

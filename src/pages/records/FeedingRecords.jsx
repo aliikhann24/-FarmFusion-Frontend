@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { feedingAPI, animalsAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
 
 const defaultForm = {
   animal: '', feedType: '', quantity: '', unit: 'kg',
@@ -55,10 +54,10 @@ export default function FeedingRecords() {
     } catch { toast.error('Failed to delete'); }
   };
 
-  const totalCost = records.reduce((sum, r) => sum + (r.cost || 0), 0);
-  const totalRecords = records.length;
+  const totalCost     = records.reduce((sum, r) => sum + (r.cost || 0), 0);
+  const totalRecords  = records.length;
   const uniqueAnimals = [...new Set(records.map(r => r.animal?._id))].length;
-  const feedTypes = [...new Set(records.map(r => r.feedType))].length;
+  const feedTypes     = [...new Set(records.map(r => r.feedType))].length;
 
   return (
     <div>
@@ -69,13 +68,12 @@ export default function FeedingRecords() {
 
       <div className="page-content">
 
-        {/* Summary Stats */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginBottom: '24px' }}>
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Records',   value: totalRecords,                   icon: '🌾', cls: 'green'  },
-            { label: 'Animals Fed',     value: uniqueAnimals,                  icon: '🐄', cls: 'blue'   },
-            { label: 'Feed Types',      value: feedTypes,                      icon: '🥣', cls: 'orange' },
-            { label: 'Total Cost (PKR)',value: totalCost.toLocaleString(),      icon: '💰', cls: 'purple' },
+            { label: 'Total Records',    value: totalRecords,                icon: '🌾', cls: 'green'  },
+            { label: 'Animals Fed',      value: uniqueAnimals,               icon: '🐄', cls: 'blue'   },
+            { label: 'Feed Types',       value: feedTypes,                   icon: '🥣', cls: 'orange' },
+            { label: 'Total Cost (PKR)', value: totalCost.toLocaleString(),  icon: '💰', cls: 'purple' },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
@@ -87,7 +85,6 @@ export default function FeedingRecords() {
           ))}
         </div>
 
-        {/* Filter */}
         <div className="filter-bar">
           <select
             className="search-input"
@@ -104,7 +101,6 @@ export default function FeedingRecords() {
           </select>
         </div>
 
-        {/* Table */}
         <div className="card">
           {loading ? (
             <div className="empty-state"><p>Loading...</p></div>
@@ -138,9 +134,7 @@ export default function FeedingRecords() {
                           {r.animal?.species}
                         </div>
                       </td>
-                      <td>
-                        <span className="badge badge-green">{r.feedType}</span>
-                      </td>
+                      <td><span className="badge badge-green">{r.feedType}</span></td>
                       <td>{r.quantity} {r.unit}</td>
                       <td>{r.cost ? `PKR ${Number(r.cost).toLocaleString()}` : '—'}</td>
                       <td>{new Date(r.feedingDate).toLocaleDateString()}</td>
@@ -161,7 +155,6 @@ export default function FeedingRecords() {
         </div>
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -173,57 +166,38 @@ export default function FeedingRecords() {
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Animal *</label>
-                  <select
-                    value={form.animal}
-                    onChange={e => setForm(p => ({ ...p, animal: e.target.value }))}
-                    required
-                  >
+                  <select value={form.animal}
+                    onChange={e => setForm(p => ({ ...p, animal: e.target.value }))} required>
                     <option value="">Select animal</option>
                     {animals.map(a => (
-                      <option key={a._id} value={a._id}>
-                        {a.name || a.tagId} ({a.species})
-                      </option>
+                      <option key={a._id} value={a._id}>{a.name || a.tagId} ({a.species})</option>
                     ))}
                   </select>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Feed Type *</label>
-                    <input
-                      value={form.feedType}
+                    <input value={form.feedType}
                       onChange={e => setForm(p => ({ ...p, feedType: e.target.value }))}
-                      placeholder="e.g. Hay, Silage, Grain"
-                      required
-                    />
+                      placeholder="e.g. Hay, Silage, Grain" required />
                   </div>
                   <div className="form-group">
                     <label>Date *</label>
-                    <input
-                      type="date"
-                      value={form.feedingDate}
-                      onChange={e => setForm(p => ({ ...p, feedingDate: e.target.value }))}
-                      required
-                    />
+                    <input type="date" value={form.feedingDate}
+                      onChange={e => setForm(p => ({ ...p, feedingDate: e.target.value }))} required />
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
                     <label>Quantity *</label>
-                    <input
-                      type="number"
-                      value={form.quantity}
+                    <input type="number" value={form.quantity}
                       onChange={e => setForm(p => ({ ...p, quantity: e.target.value }))}
-                      required min="0" placeholder="0"
-                    />
+                      required min="0" placeholder="0" />
                   </div>
                   <div className="form-group">
                     <label>Unit</label>
-                    <select
-                      value={form.unit}
-                      onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}
-                    >
+                    <select value={form.unit}
+                      onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}>
                       <option>kg</option>
                       <option>lbs</option>
                       <option>liters</option>
@@ -231,31 +205,20 @@ export default function FeedingRecords() {
                     </select>
                   </div>
                 </div>
-
                 <div className="form-group">
                   <label>Cost (PKR)</label>
-                  <input
-                    type="number"
-                    value={form.cost}
+                  <input type="number" value={form.cost}
                     onChange={e => setForm(p => ({ ...p, cost: e.target.value }))}
-                    min="0" placeholder="0"
-                  />
+                    min="0" placeholder="0" />
                 </div>
-
                 <div className="form-group">
                   <label>Notes</label>
-                  <textarea
-                    value={form.notes}
+                  <textarea value={form.notes}
                     onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                    rows={3} style={{ resize: 'vertical' }}
-                    placeholder="Any additional notes..."
-                  />
+                    rows={3} style={{ resize: 'vertical' }} placeholder="Any additional notes..." />
                 </div>
-
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
-                    Cancel
-                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
                     {saving ? 'Saving...' : 'Add Record'}
                   </button>

@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import Spinner from '../components/common/Spinner';
 
 export default function NotFound() {
   return (

@@ -480,3 +480,15 @@ table {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+/* ===== PROFILE RESPONSIVE ===== */
+.profile-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+}

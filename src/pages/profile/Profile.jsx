@@ -2,10 +2,9 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 import { authAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
 
 export default function Profile() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
 
   const [profileForm, setProfileForm] = useState({
     name:     user?.name     || '',
@@ -27,7 +26,6 @@ export default function Profile() {
     try {
       await authAPI.updateProfile(profileForm);
       toast.success('Profile updated! ✅');
-      // update local storage
       const updated = { ...user, ...profileForm };
       localStorage.setItem('farmfusion_user', JSON.stringify(updated));
     } catch (err) {
@@ -37,12 +35,10 @@ export default function Profile() {
 
   const handlePassSave = async (e) => {
     e.preventDefault();
-    if (passForm.newPassword !== passForm.confirmPassword) {
+    if (passForm.newPassword !== passForm.confirmPassword)
       return toast.error('New passwords do not match');
-    }
-    if (passForm.newPassword.length < 6) {
+    if (passForm.newPassword.length < 6)
       return toast.error('Password must be at least 6 characters');
-    }
     setSavingPass(true);
     try {
       await authAPI.changePassword({
@@ -65,7 +61,7 @@ export default function Profile() {
       </div>
 
       <div className="page-content">
-        <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: '24px' }}>
+        <div className="profile-grid">
 
           {/* Left — Avatar Card */}
           <div>
@@ -90,16 +86,14 @@ export default function Profile() {
                   </p>
                 )}
               </div>
-
-              {/* Account Info */}
               <div style={{ borderTop: '1px solid var(--border)', padding: '20px 24px' }}>
                 <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px' }}>
                   Account Info
                 </div>
                 {[
-                  { label: 'Role',    value: 'Farmer' },
-                  { label: 'Phone',   value: user?.phone || 'Not set' },
-                  { label: 'Member',  value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A' },
+                  { label: 'Role',   value: 'Farmer' },
+                  { label: 'Phone',  value: user?.phone || 'Not set' },
+                  { label: 'Member', value: user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A' },
                 ].map(item => (
                   <div key={item.label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{item.label}</span>
@@ -112,15 +106,12 @@ export default function Profile() {
 
           {/* Right — Forms */}
           <div>
-            {/* Tabs */}
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px', flexWrap: 'wrap' }}>
               {[
                 { key: 'profile',  label: '✏️ Edit Profile' },
                 { key: 'password', label: '🔒 Change Password' },
               ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
                   style={{
                     padding: '10px 20px', borderRadius: '8px', border: 'none',
                     cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem',
@@ -128,14 +119,12 @@ export default function Profile() {
                     color:      activeTab === tab.key ? 'white' : 'var(--text-muted)',
                     boxShadow:  activeTab === tab.key ? 'var(--shadow)' : 'none',
                     transition: 'all 0.2s'
-                  }}
-                >
+                  }}>
                   {tab.label}
                 </button>
               ))}
             </div>
 
-            {/* Edit Profile Tab */}
             {activeTab === 'profile' && (
               <div className="card">
                 <div className="card-header"><h3>Edit Profile</h3></div>
@@ -144,37 +133,27 @@ export default function Profile() {
                     <div className="form-row">
                       <div className="form-group">
                         <label>Full Name *</label>
-                        <input
-                          value={profileForm.name}
+                        <input value={profileForm.name}
                           onChange={e => setProfileForm(p => ({ ...p, name: e.target.value }))}
-                          placeholder="Ahmed Khan"
-                          required
-                        />
+                          placeholder="Ahmed Khan" required />
                       </div>
                       <div className="form-group">
                         <label>Farm Name</label>
-                        <input
-                          value={profileForm.farmName}
+                        <input value={profileForm.farmName}
                           onChange={e => setProfileForm(p => ({ ...p, farmName: e.target.value }))}
-                          placeholder="Green Valley Farm"
-                        />
+                          placeholder="Green Valley Farm" />
                       </div>
                     </div>
                     <div className="form-group">
                       <label>Phone Number</label>
-                      <input
-                        value={profileForm.phone}
+                      <input value={profileForm.phone}
                         onChange={e => setProfileForm(p => ({ ...p, phone: e.target.value }))}
-                        placeholder="+92 300 1234567"
-                      />
+                        placeholder="+92 300 1234567" />
                     </div>
                     <div className="form-group">
                       <label>Email Address</label>
-                      <input
-                        value={user?.email}
-                        disabled
-                        style={{ background: '#f5f5f5', cursor: 'not-allowed', opacity: 0.7 }}
-                      />
+                      <input value={user?.email} disabled
+                        style={{ background: '#f5f5f5', cursor: 'not-allowed', opacity: 0.7 }} />
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                         Email cannot be changed
                       </p>
@@ -189,7 +168,6 @@ export default function Profile() {
               </div>
             )}
 
-            {/* Change Password Tab */}
             {activeTab === 'password' && (
               <div className="card">
                 <div className="card-header"><h3>Change Password</h3></div>
@@ -197,36 +175,22 @@ export default function Profile() {
                   <form onSubmit={handlePassSave}>
                     <div className="form-group">
                       <label>Current Password *</label>
-                      <input
-                        type="password"
-                        value={passForm.currentPassword}
+                      <input type="password" value={passForm.currentPassword}
                         onChange={e => setPassForm(p => ({ ...p, currentPassword: e.target.value }))}
-                        placeholder="••••••••"
-                        required
-                      />
+                        placeholder="••••••••" required />
                     </div>
                     <div className="form-group">
                       <label>New Password *</label>
-                      <input
-                        type="password"
-                        value={passForm.newPassword}
+                      <input type="password" value={passForm.newPassword}
                         onChange={e => setPassForm(p => ({ ...p, newPassword: e.target.value }))}
-                        placeholder="Min. 6 characters"
-                        required
-                      />
+                        placeholder="Min. 6 characters" required />
                     </div>
                     <div className="form-group">
                       <label>Confirm New Password *</label>
-                      <input
-                        type="password"
-                        value={passForm.confirmPassword}
+                      <input type="password" value={passForm.confirmPassword}
                         onChange={e => setPassForm(p => ({ ...p, confirmPassword: e.target.value }))}
-                        placeholder="••••••••"
-                        required
-                      />
+                        placeholder="••••••••" required />
                     </div>
-
-                    {/* Password match indicator */}
                     {passForm.newPassword && passForm.confirmPassword && (
                       <div style={{
                         padding: '10px 14px', borderRadius: '8px', marginBottom: '16px',
@@ -239,7 +203,6 @@ export default function Profile() {
                           : '❌ Passwords do not match'}
                       </div>
                     )}
-
                     <div className="form-actions">
                       <button type="submit" className="btn btn-primary" disabled={savingPass}>
                         {savingPass ? 'Changing...' : 'Change Password 🔒'}

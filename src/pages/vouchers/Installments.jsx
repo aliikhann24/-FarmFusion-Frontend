@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import { installmentsAPI } from '../../utils/api';
-import Spinner from '../../components/common/Spinner';
 
 const defaultForm = {
   title: '', totalAmount: '', installmentAmount: '',
@@ -68,10 +67,8 @@ export default function Installments() {
   };
 
   const statusMap = {
-    Active:    'badge-blue',
-    Completed: 'badge-green',
-    Overdue:   'badge-red',
-    Cancelled: 'badge-gray'
+    Active: 'badge-blue', Completed: 'badge-green',
+    Overdue: 'badge-red', Cancelled: 'badge-gray'
   };
 
   const totalPlans     = installments.length;
@@ -88,18 +85,17 @@ export default function Installments() {
 
       <div className="page-content">
 
-        {/* Stats */}
-        <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)', marginBottom: '24px' }}>
+        <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Plans',      value: totalPlans,                          icon: '💳', cls: 'blue'   },
-            { label: 'Active',           value: activePlans,                         icon: '🔄', cls: 'orange' },
-            { label: 'Completed',        value: completedPlans,                      icon: '✅', cls: 'green'  },
-            { label: 'Total Remaining',  value: `PKR ${totalRemaining.toLocaleString()}`, icon: '💰', cls: 'purple' },
+            { label: 'Total Plans',     value: totalPlans,                              icon: '💳', cls: 'blue'   },
+            { label: 'Active',          value: activePlans,                             icon: '🔄', cls: 'orange' },
+            { label: 'Completed',       value: completedPlans,                          icon: '✅', cls: 'green'  },
+            { label: 'Total Remaining', value: `PKR ${totalRemaining.toLocaleString()}`, icon: '💰', cls: 'purple' },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
               <div className="stat-info">
-                <div className="value" style={{ fontSize: s.label === 'Total Remaining' ? '1.2rem' : '1.8rem' }}>
+                <div className="value" style={{ fontSize: s.label === 'Total Remaining' ? '1.1rem' : '1.8rem' }}>
                   {s.value}
                 </div>
                 <div className="label">{s.label}</div>
@@ -108,7 +104,6 @@ export default function Installments() {
           ))}
         </div>
 
-        {/* Table */}
         <div className="card">
           {loading ? (
             <div className="empty-state"><p>Loading...</p></div>
@@ -125,10 +120,10 @@ export default function Installments() {
                 <thead>
                   <tr>
                     <th>Title</th>
-                    <th>Total Amount</th>
+                    <th>Total</th>
                     <th>Paid</th>
                     <th>Remaining</th>
-                    <th>Per Installment</th>
+                    <th>Per Install.</th>
                     <th>Frequency</th>
                     <th>Status</th>
                     <th>Actions</th>
@@ -142,7 +137,7 @@ export default function Installments() {
                       <tr key={i._id}>
                         <td>
                           <strong>{i.title}</strong>
-                          <div style={{ marginTop: '6px', background: '#e8f5e9', borderRadius: '4px', height: '4px', width: '120px' }}>
+                          <div style={{ marginTop: '6px', background: '#e8f5e9', borderRadius: '4px', height: '4px', width: '100px' }}>
                             <div style={{ background: 'var(--primary)', borderRadius: '4px', height: '4px', width: `${progress}%` }} />
                           </div>
                           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{progress}% paid</div>
@@ -156,19 +151,13 @@ export default function Installments() {
                         </td>
                         <td>PKR {Number(i.installmentAmount).toLocaleString()}</td>
                         <td>{i.frequency}</td>
-                        <td>
-                          <span className={`badge ${statusMap[i.status]}`}>{i.status}</span>
-                        </td>
+                        <td><span className={`badge ${statusMap[i.status]}`}>{i.status}</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: '6px' }}>
                             {i.status === 'Active' && (
-                              <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>
-                                Pay
-                              </button>
+                              <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>Pay</button>
                             )}
-                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(i._id)}>
-                              Delete
-                            </button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDelete(i._id)}>Delete</button>
                           </div>
                         </td>
                       </tr>
@@ -193,40 +182,29 @@ export default function Installments() {
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
                   <label>Title *</label>
-                  <input
-                    value={form.title}
+                  <input value={form.title}
                     onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
-                    placeholder="e.g. Cow Purchase Installment"
-                    required
-                  />
+                    placeholder="e.g. Cow Purchase Installment" required />
                 </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label>Total Amount (PKR) *</label>
-                    <input
-                      type="number"
-                      value={form.totalAmount}
+                    <input type="number" value={form.totalAmount}
                       onChange={e => setForm(p => ({ ...p, totalAmount: e.target.value }))}
-                      required min="0" placeholder="0"
-                    />
+                      required min="0" placeholder="0" />
                   </div>
                   <div className="form-group">
                     <label>Per Installment (PKR) *</label>
-                    <input
-                      type="number"
-                      value={form.installmentAmount}
+                    <input type="number" value={form.installmentAmount}
                       onChange={e => setForm(p => ({ ...p, installmentAmount: e.target.value }))}
-                      required min="0" placeholder="0"
-                    />
+                      required min="0" placeholder="0" />
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
                     <label>Frequency</label>
-                    <select
-                      value={form.frequency}
-                      onChange={e => setForm(p => ({ ...p, frequency: e.target.value }))}
-                    >
+                    <select value={form.frequency}
+                      onChange={e => setForm(p => ({ ...p, frequency: e.target.value }))}>
                       <option>Weekly</option>
                       <option>Monthly</option>
                       <option>Quarterly</option>
@@ -234,26 +212,17 @@ export default function Installments() {
                   </div>
                   <div className="form-group">
                     <label>Start Date *</label>
-                    <input
-                      type="date"
-                      value={form.startDate}
-                      onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))}
-                      required
-                    />
+                    <input type="date" value={form.startDate}
+                      onChange={e => setForm(p => ({ ...p, startDate: e.target.value }))} required />
                   </div>
                 </div>
                 <div className="form-group">
                   <label>Due Date</label>
-                  <input
-                    type="date"
-                    value={form.dueDate}
-                    onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
-                  />
+                  <input type="date" value={form.dueDate}
+                    onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} />
                 </div>
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
-                    Cancel
-                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
                     {saving ? 'Creating...' : 'Create Plan'}
                   </button>
@@ -277,7 +246,7 @@ export default function Installments() {
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
                   {showPayModal.title}
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Paid so far</div>
                     <div style={{ fontWeight: 700, color: 'var(--success)' }}>
@@ -301,26 +270,18 @@ export default function Installments() {
               <form onSubmit={handlePay}>
                 <div className="form-group">
                   <label>Payment Amount (PKR) *</label>
-                  <input
-                    type="number"
-                    value={payAmount}
+                  <input type="number" value={payAmount}
                     onChange={e => setPayAmount(e.target.value)}
-                    required min="1"
-                    placeholder={showPayModal.installmentAmount}
-                  />
+                    required min="1" placeholder={showPayModal.installmentAmount} />
                 </div>
                 <div className="form-group">
                   <label>Note</label>
-                  <input
-                    value={payNote}
+                  <input value={payNote}
                     onChange={e => setPayNote(e.target.value)}
-                    placeholder="e.g. March payment"
-                  />
+                    placeholder="e.g. March payment" />
                 </div>
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowPayModal(null)}>
-                    Cancel
-                  </button>
+                  <button type="button" className="btn btn-outline" onClick={() => setShowPayModal(null)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
                     {saving ? 'Recording...' : 'Record Payment'}
                   </button>
