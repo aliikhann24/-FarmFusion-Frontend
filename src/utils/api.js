@@ -65,8 +65,10 @@ export const vouchersAPI = {
 };
 
 export const progressAPI = {
-  getAll:  (params) => API.get('/progress', { params }),
-  create:  (data)   => API.post('/progress', data),
+  getAll:  (params)   => API.get('/progress', { params }),
+  create:  (data)     => API.post('/progress', data),
+  update:  (id, data) => API.put(`/progress/${id}`, data),
+  delete:  (id)       => API.delete(`/progress/${id}`),
 };
 
 export const cattleAPI = {
@@ -74,5 +76,10 @@ export const cattleAPI = {
   create:  (data)   => API.post('/cattle', data),
   buy:     (id)     => API.post(`/cattle/${id}/buy`),
 };
-
+export const enquiryAPI = {
+  submit:   (data)       => api.post('/enquiries', data),
+  received: ()           => api.get('/enquiries/received'),
+  sent:     ()           => api.get('/enquiries/sent'),
+  update:   (id, status) => api.patch(`/enquiries/${id}/status`, { status }),
+};
 export default API;
