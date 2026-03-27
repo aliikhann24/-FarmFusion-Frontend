@@ -29,7 +29,7 @@ export default function Login() {
     <div className="auth-page">
 
       {/* Background Image with Overlay */}
-      <div className="auth-bg" />
+      <div className="auth-bg auth-bg-login" />
 
       {/* Content */}
       <div className="auth-container">

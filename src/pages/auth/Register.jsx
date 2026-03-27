@@ -30,7 +30,7 @@ export default function Register() {
     <div className="auth-page">
 
       {/* Background Image with Overlay */}
-      <div className="auth-bg" />
+      <div className="auth-bg auth-bg-register" />
 
       {/* Content */}
       <div className="auth-container">
