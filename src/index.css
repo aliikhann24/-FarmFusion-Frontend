@@ -715,3 +715,30 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 .auth-bg-register {
   background-image: url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=1920&q=80');
 }
+/* ===== LIGHT FARM TEXTURE BACKGROUND ===== */
+.main-content {
+  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=60');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* White overlay to keep it light and readable */
+.main-content::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: rgba(248, 250, 248, 0.92);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Make sure all content sits above the overlay */
+.mobile-topbar,
+.page-header,
+.page-content {
+  position: relative;
+  z-index: 1;
+}

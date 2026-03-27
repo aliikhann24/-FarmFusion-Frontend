@@ -51,7 +51,7 @@ export default function Login() {
         <div className="auth-card">
           <div className="auth-card-header">
             <div className="auth-card-icon">🌾</div>
-            <h2>Welcome back</h2>
+            <h2>Welcome</h2>
             <p>Sign in to your FarmFusion account</p>
           </div>
 
