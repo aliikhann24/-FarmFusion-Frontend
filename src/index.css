@@ -198,7 +198,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
   width: calc(100% - 260px);
   position: relative;
   /* Farm texture background */
-  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=60');
+  background-image: url('cattle.jpg');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
