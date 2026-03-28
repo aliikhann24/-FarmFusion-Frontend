@@ -663,6 +663,17 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 .page-profile::before {
   background-image: url('group\ cows.jpg');
 }
+.page-dashboard,
+.page-animals,
+.page-breeding,
+.page-feeding,
+.page-progress,
+.page-cattle,
+.page-installments,
+.page-vouchers,
+.page-profile {
+  position: relative;
+}
 
 /* Disable fixed background on mobile for performance */
 @media (max-width: 768px) {
