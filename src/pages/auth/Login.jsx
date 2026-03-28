@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -27,14 +28,9 @@ export default function Login() {
 
   return (
     <div className="auth-page">
-
-      {/* Background Image with Overlay */}
       <div className="auth-bg auth-bg-login" />
-
-      {/* Content */}
       <div className="auth-container">
 
-        {/* Left — Branding */}
         <div className="auth-brand">
           <div className="auth-brand-logo">Farm<span>Fusion</span></div>
           <p className="auth-brand-tagline">Your complete livestock management platform</p>
@@ -47,7 +43,6 @@ export default function Login() {
           </ul>
         </div>
 
-        {/* Right — Form Card */}
         <div className="auth-card">
           <div className="auth-card-header">
             <div className="auth-card-icon">🌾</div>
@@ -61,11 +56,28 @@ export default function Login() {
               <input type="email" name="email" placeholder="you@farm.com"
                 value={form.email} onChange={handleChange} required />
             </div>
+
             <div className="form-group">
               <label>Password</label>
-              <input type="password" name="password" placeholder="••••••••"
-                value={form.password} onChange={handleChange} required />
+              <div className="password-input-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="••••••••"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
+
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
               {loading ? 'Signing in...' : 'Sign In 🌾'}
             </button>

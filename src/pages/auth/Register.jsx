@@ -4,8 +4,10 @@ import { toast } from 'react-toastify';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Register() {
-  const [form, setForm] = useState({ name: '', email: '', password: '', phone: '', farmName: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '', phone: '', farmName: '' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
 
@@ -14,6 +16,7 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (form.password.length < 6) return toast.error('Password must be at least 6 characters');
+    if (form.password !== form.confirmPassword) return toast.error('Passwords do not match! ❌');
     setLoading(true);
     try {
       await register(form);
@@ -28,14 +31,9 @@ export default function Register() {
 
   return (
     <div className="auth-page">
-
-      {/* Background Image with Overlay */}
       <div className="auth-bg auth-bg-register" />
-
-      {/* Content */}
       <div className="auth-container">
 
-        {/* Left — Branding */}
         <div className="auth-brand">
           <div className="auth-brand-logo">Farm<span>Fusion</span></div>
           <p className="auth-brand-tagline">Join thousands of farmers managing their livestock smarter</p>
@@ -47,7 +45,6 @@ export default function Register() {
           </ul>
         </div>
 
-        {/* Right — Form Card */}
         <div className="auth-card">
           <div className="auth-card-header">
             <div className="auth-card-icon">🐄</div>
@@ -68,21 +65,70 @@ export default function Register() {
                   value={form.farmName} onChange={handleChange} />
               </div>
             </div>
+
             <div className="form-group">
               <label>Email Address *</label>
               <input type="email" name="email" placeholder="ahmed@farm.com"
                 value={form.email} onChange={handleChange} required />
             </div>
+
             <div className="form-group">
               <label>Phone Number</label>
               <input type="tel" name="phone" placeholder="+92 300 1234567"
                 value={form.phone} onChange={handleChange} />
             </div>
+
             <div className="form-group">
               <label>Password *</label>
-              <input type="password" name="password" placeholder="Min. 6 characters"
-                value={form.password} onChange={handleChange} required />
+              <div className="password-input-wrapper">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  placeholder="Min. 6 characters"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </button>
+              </div>
             </div>
+
+            <div className="form-group">
+              <label>Confirm Password *</label>
+              <div className="password-input-wrapper">
+                <input
+                  type={showConfirm ? 'text' : 'password'}
+                  name="confirmPassword"
+                  placeholder="Re-enter your password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                >
+                  {showConfirm ? '🙈' : '👁️'}
+                </button>
+              </div>
+              {/* Password match indicator */}
+              {form.confirmPassword && (
+                <p style={{
+                  fontSize: '0.78rem', marginTop: '6px', fontWeight: 500,
+                  color: form.password === form.confirmPassword ? '#2e7d32' : '#c62828'
+                }}>
+                  {form.password === form.confirmPassword ? '✅ Passwords match!' : '❌ Passwords do not match'}
+                </p>
+              )}
+            </div>
+
             <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
               {loading ? 'Creating account...' : 'Create Account 🌾'}
             </button>
