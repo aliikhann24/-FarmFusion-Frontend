@@ -69,6 +69,7 @@ const AppRoutes = () => {
         <Route path="installments"     element={<Installments />} />
         <Route path="vouchers"         element={<Vouchers />} />
         <Route path="profile"          element={<Profile />} />
+        <Route path="vaccination-records" element={<VaccinationRecords />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
