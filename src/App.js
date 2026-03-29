@@ -19,7 +19,6 @@ import Installments from './pages/vouchers/Installments';
 import Vouchers from './pages/vouchers/Vouchers';
 import Profile from './pages/profile/Profile';
 import NotFound from './pages/NotFound';
-import logo from '../assets/favicon.svg';
 
 // ✅ ProtectedRoute defined here
 const ProtectedRoute = ({ children }) => {
