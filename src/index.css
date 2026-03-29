@@ -212,15 +212,27 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
 }
 .mobile-logo span { color: var(--primary-light); }
 
-/* ===== PAGE HEADER ===== */
+/* ===== PAGE HEADER — CENTERED WITH BUTTON RIGHT ===== */
 .page-header {
   background: white;
   padding: 20px 32px;
   border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  position: sticky; top: 0; z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
 }
-.page-header > div { flex: 1; text-align: center; }
+
+/* Center the text div but keep button on right */
+.page-header > div:first-child {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+}
+
 .page-header h2 { font-size: 1.4rem; color: var(--primary-dark); }
 .page-header p { color: var(--text-muted); font-size: 0.85rem; }
 
@@ -429,13 +441,21 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
     box-shadow: var(--shadow); width: 100%; height: 52px;
   }
 
+  /* On mobile header goes back to normal flow */
   .page-header {
     position: relative; top: auto;
     padding: 14px 16px;
-    flex-direction: column; align-items: flex-start; gap: 10px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .page-header > div:first-child {
+    position: relative;
+    left: auto;
+    transform: none;
     text-align: left;
   }
-  .page-header > div { text-align: left; }
 
   .page-content { padding: 12px; }
 
@@ -502,12 +522,12 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 
 /* LOGIN — green farm fields */
 .auth-bg-login {
-  background-image: url('cows.jpg');
+  background-image: url('https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1920&q=80');
 }
 
 /* REGISTER — cattle grazing */
 .auth-bg-register {
-  background-image: url('sheep.jpg');
+  background-image: url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=1920&q=80');
 }
 
 .auth-container {
@@ -598,7 +618,7 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 }
 .password-toggle:hover { transform: none !important; }
 
-/* ===== PER PAGE BACKGROUND IMAGES ===== */
+/* ===== PER PAGE BACKGROUND IMAGES — ALL UNSPLASH ===== */
 .page-dashboard::before,
 .page-animals::before,
 .page-breeding::before,
@@ -607,7 +627,8 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 .page-cattle::before,
 .page-installments::before,
 .page-vouchers::before,
-.page-profile::before {
+.page-profile::before,
+.page-vaccination::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -616,55 +637,60 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   background-repeat: no-repeat;
   background-attachment: fixed;
   z-index: -1;
-  opacity: 0.07;
+  opacity: 0.08;
 }
 
-/* Dashboard — sunrise farm */
+/* Dashboard — sunrise over farm fields */
 .page-dashboard::before {
-  background-image: url('buffalo.jpg');
+  background-image: url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920&q=60');
 }
 
-/* My Animals — cows in field */
+/* My Animals — cows grazing */
 .page-animals::before {
-  background-image: url('bull.jpg');
+  background-image: url('https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=1920&q=60');
 }
 
-/* Breeding Records */
+/* Breeding Records — two cattle */
 .page-breeding::before {
-  background-image: url('background.jpg');
+  background-image: url('https://images.unsplash.com/photo-1596733430284-f7437764b1a9?w=1920&q=60');
 }
 
-/* Feeding Records — hay farm */
+/* Feeding Records — hay bales */
 .page-feeding::before {
-  background-image: url('cattles.jpg');
+  background-image: url('https://images.unsplash.com/photo-1464226184884-fa280b87c399?w=1920&q=60');
 }
 
-/* Animal Progress — healthy animals */
+/* Animal Progress — healthy livestock */
 .page-progress::before {
-  background-image: url('calfs.jpg');
+  background-image: url('https://images.unsplash.com/photo-1533318087102-b3ad366ed041?w=1920&q=60');
 }
 
-/* Cattle Market */
+/* Cattle Market — open farm market */
 .page-cattle::before {
-  background-image: url('love.jpg');
+  background-image: url('https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=1920&q=60');
 }
 
-/* Installments — finance */
+/* Installments — finance field */
 .page-installments::before {
-  background-image: url('sheeps.jpg');
+  background-image: url('https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1920&q=60');
 }
 
-/* Vouchers — finance records */
+/* Vouchers — financial records */
 .page-vouchers::before {
-  background-image: url('sheepy.jpg');
+  background-image: url('https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=1920&q=60');
 }
 
-/* Profile — farmer */
+/* Profile — farmer portrait */
 .page-profile::before {
-  background-image: url('group\ cows.jpg');
+  background-image: url('https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?w=1920&q=60');
 }
 
-/* Disable fixed background on mobile for performance */
+/* Vaccination — vet/medicine */
+.page-vaccination::before {
+  background-image: url('https://images.unsplash.com/photo-1628771065518-0d82f1938462?w=1920&q=60');
+}
+
+/* Mobile — disable fixed attachment for performance */
 @media (max-width: 768px) {
   .page-dashboard::before,
   .page-animals::before,
@@ -674,23 +700,8 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .page-cattle::before,
   .page-installments::before,
   .page-vouchers::before,
-  .page-profile::before {
+  .page-profile::before,
+  .page-vaccination::before {
     background-attachment: scroll;
   }
-}
-/* Vaccination page background */
-.page-vaccination::before {
-  content: '';
-  position: fixed; inset: 0;
-  background-image: url('calfs.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  z-index: -1;
-  opacity: 0.07;
-}
-
-@media (max-width: 768px) {
-  .page-vaccination::before { background-attachment: scroll; }
 }
