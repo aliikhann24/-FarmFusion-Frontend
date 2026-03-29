@@ -3,6 +3,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
+
 const navItems = [
   { section: 'Overview', items: [
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
@@ -104,7 +105,7 @@ export default function Layout() {
             {initials}
           </div>
         </div>
-
+        <img src={favicon.svg} alt="FarmFusion" height="40" />
         <Outlet />
       </main>
 
