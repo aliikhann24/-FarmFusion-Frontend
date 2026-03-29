@@ -20,7 +20,6 @@ import Vouchers from './pages/vouchers/Vouchers';
 import Profile from './pages/profile/Profile';
 import NotFound from './pages/NotFound';
 
-// ✅ ProtectedRoute defined here
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return (
@@ -44,14 +43,12 @@ const ProtectedRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" replace />;
 };
 
-// ✅ PublicRoute defined here
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return null;
   return user ? <Navigate to="/dashboard" replace /> : children;
 };
 
-// ✅ AppRoutes separated so useAuth works inside BrowserRouter + AuthProvider
 const AppRoutes = () => {
   return (
     <Routes>
@@ -60,15 +57,16 @@ const AppRoutes = () => {
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-        <Route path="dashboard"        element={<Dashboard />} />
-        <Route path="my-animals"       element={<MyAnimals />} />
-        <Route path="cattle"           element={<CattleMarket />} />
-        <Route path="breeding-records" element={<BreedingRecords />} />
-        <Route path="feeding-records"  element={<FeedingRecords />} />
-        <Route path="animal-progress"  element={<AnimalProgress />} />
-        <Route path="installments"     element={<Installments />} />
-        <Route path="vouchers"         element={<Vouchers />} />
-        <Route path="profile"          element={<Profile />} />
+        <Route path="dashboard"            element={<Dashboard />} />
+        <Route path="my-animals"           element={<MyAnimals />} />
+        <Route path="cattle"               element={<CattleMarket />} />
+        <Route path="breeding-records"     element={<BreedingRecords />} />
+        <Route path="feeding-records"      element={<FeedingRecords />} />
+        <Route path="animal-progress"      element={<AnimalProgress />} />
+        <Route path="vaccination-records"  element={<VaccinationRecords />} />
+        <Route path="installments"         element={<Installments />} />
+        <Route path="vouchers"             element={<Vouchers />} />
+        <Route path="profile"              element={<Profile />} />
       </Route>
 
       <Route path="*" element={<NotFound />} />
