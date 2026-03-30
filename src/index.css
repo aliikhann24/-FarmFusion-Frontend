@@ -212,7 +212,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
 }
 .mobile-logo span { color: var(--primary-light); }
 
-/* ===== PAGE HEADER — TITLE CENTERED, BUTTON RIGHT ===== */
+/* ===== PAGE HEADER ===== */
 .page-header {
   background: white;
   padding: 20px 32px;
@@ -220,12 +220,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
   display: flex; align-items: center; justify-content: space-between;
   position: sticky; top: 0; z-index: 50;
 }
-.page-header > div:first-child {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  text-align: center;
-}
+.page-header > div { flex: 1; text-align: center; }
 .page-header h2 { font-size: 1.4rem; color: var(--primary-dark); }
 .page-header p { color: var(--text-muted); font-size: 0.85rem; }
 
@@ -438,13 +433,9 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
     position: relative; top: auto;
     padding: 14px 16px;
     flex-direction: column; align-items: flex-start; gap: 10px;
-  }
-  .page-header > div:first-child {
-    position: relative;
-    left: auto;
-    transform: none;
     text-align: left;
   }
+  .page-header > div { text-align: left; }
 
   .page-content { padding: 12px; }
 
@@ -509,19 +500,14 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   );
 }
 
-/* =============================================
-   🖼️ IMAGE FILES — put all in /public folder
-   Rename files to match exactly (no spaces!)
-   ============================================= */
-
-/* LOGIN page background */
+/* LOGIN — green farm fields */
 .auth-bg-login {
-  background-image: url('/cows.jpg');
+  background-image: url('cows.jpg');
 }
 
-/* REGISTER page background */
+/* REGISTER — cattle grazing */
 .auth-bg-register {
-  background-image: url('/sheep.jpg');
+  background-image: url('sheep.jpg');
 }
 
 .auth-container {
@@ -612,11 +598,7 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 }
 .password-toggle:hover { transform: none !important; }
 
-/* =============================================
-   🖼️ PER PAGE BACKGROUNDS
-   Files must be in /public folder
-   No spaces in filenames!
-   ============================================= */
+/* ===== PER PAGE BACKGROUND IMAGES ===== */
 .page-dashboard::before,
 .page-animals::before,
 .page-breeding::before,
@@ -625,69 +607,64 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 .page-cattle::before,
 .page-installments::before,
 .page-vouchers::before,
-.page-profile::before,
-.page-vaccination::before {
+.page-profile::before {
   content: '';
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   z-index: -1;
-  opacity: 0.09;
+  opacity: 0.07;
 }
 
-/* Dashboard */
+/* Dashboard — sunrise farm */
 .page-dashboard::before {
-  background-image: url('/buffalo.jpg');
+  background-image: url('buffalo.jpg');
 }
 
-/* My Animals */
+/* My Animals — cows in field */
 .page-animals::before {
-  background-image: url('/bull.jpg');
+  background-image: url('bull.jpg');
 }
 
 /* Breeding Records */
 .page-breeding::before {
-  background-image: url('/background.jpg');
+  background-image: url('background.jpg');
 }
 
-/* Feeding Records */
+/* Feeding Records — hay farm */
 .page-feeding::before {
-  background-image: url('/cattles.jpg');
+  background-image: url('cattles.jpg');
 }
 
-/* Animal Progress */
+/* Animal Progress — healthy animals */
 .page-progress::before {
-  background-image: url('/calfs.jpg');
+  background-image: url('calfs.jpg');
 }
 
 /* Cattle Market */
 .page-cattle::before {
-  background-image: url('/love.jpg');
+  background-image: url('love.jpg');
 }
 
-/* Installments */
+/* Installments — finance */
 .page-installments::before {
-  background-image: url('/sheeps.jpg');
+  background-image: url('sheeps.jpg');
 }
 
-/* Vouchers */
+/* Vouchers — finance records */
 .page-vouchers::before {
-  background-image: url('/sheepy.jpg');
+  background-image: url('sheepy.jpg');
 }
 
-/* Profile */
+/* Profile — farmer */
 .page-profile::before {
-  background-image: url('/group-cows.jpg');
+  background-image: url('group\ cows.jpg');
 }
 
-/* Vaccination */
-.page-vaccination::before {
-  background-image: url('/calfs.jpg');
-}
-
-/* Mobile — disable fixed for performance */
+/* Disable fixed background on mobile for performance */
 @media (max-width: 768px) {
   .page-dashboard::before,
   .page-animals::before,
@@ -697,8 +674,23 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .page-cattle::before,
   .page-installments::before,
   .page-vouchers::before,
-  .page-profile::before,
-  .page-vaccination::before {
+  .page-profile::before {
     background-attachment: scroll;
   }
+}
+/* Vaccination page background */
+.page-vaccination::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url('calfs.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  z-index: -1;
+  opacity: 0.07;
+}
+
+@media (max-width: 768px) {
+  .page-vaccination::before { background-attachment: scroll; }
 }
