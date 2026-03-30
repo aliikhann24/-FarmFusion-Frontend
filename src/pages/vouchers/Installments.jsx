@@ -9,13 +9,14 @@ const defaultForm = {
 
 export default function Installments() {
   const [installments, setInstallments] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading]           = useState(true);
+  const [showModal, setShowModal]       = useState(false);
   const [showPayModal, setShowPayModal] = useState(null);
-  const [form, setForm] = useState(defaultForm);
-  const [payAmount, setPayAmount] = useState('');
-  const [payNote, setPayNote] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [editRecord, setEditRecord]     = useState(null);
+  const [form, setForm]                 = useState(defaultForm);
+  const [payAmount, setPayAmount]       = useState('');
+  const [payNote, setPayNote]           = useState('');
+  const [saving, setSaving]             = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -28,14 +29,43 @@ export default function Installments() {
 
   useEffect(() => { load(); }, []);
 
+  const openAdd = () => {
+    setEditRecord(null);
+    setForm(defaultForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (i) => {
+    setEditRecord(i);
+    setForm({
+      title:               i.title || '',
+      totalAmount:         i.totalAmount || '',
+      installmentAmount:   i.installmentAmount || '',
+      frequency:           i.frequency || 'Monthly',
+      startDate:           i.startDate ? i.startDate.split('T')[0] : '',
+      dueDate:             i.dueDate   ? i.dueDate.split('T')[0]   : '',
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditRecord(null);
+    setForm(defaultForm);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await installmentsAPI.create(form);
-      toast.success('Installment plan created! 💳');
-      setShowModal(false);
-      setForm(defaultForm);
+      if (editRecord) {
+        await installmentsAPI.update(editRecord._id, form);
+        toast.success('Installment plan updated! ✅');
+      } else {
+        await installmentsAPI.create(form);
+        toast.success('Installment plan created! 💳');
+      }
+      closeModal();
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
@@ -80,16 +110,15 @@ export default function Installments() {
     <div className="page-installments">
       <div className="page-header">
         <div><h2>💳 My Installments</h2><p>Track your payment plans</p></div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Plan</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ New Plan</button>
       </div>
 
       <div className="page-content">
-
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Plans',     value: totalPlans,                              icon: '💳', cls: 'blue'   },
-            { label: 'Active',          value: activePlans,                             icon: '🔄', cls: 'orange' },
-            { label: 'Completed',       value: completedPlans,                          icon: '✅', cls: 'green'  },
+            { label: 'Total Plans',     value: totalPlans,                               icon: '💳', cls: 'blue'   },
+            { label: 'Active',          value: activePlans,                              icon: '🔄', cls: 'orange' },
+            { label: 'Completed',       value: completedPlans,                           icon: '✅', cls: 'green'  },
             { label: 'Total Remaining', value: `PKR ${totalRemaining.toLocaleString()}`, icon: '💰', cls: 'purple' },
           ].map(s => (
             <div className="stat-card" key={s.label}>
@@ -112,21 +141,16 @@ export default function Installments() {
               <div className="icon">💳</div>
               <h3>No installment plans</h3>
               <p>Create a plan to start tracking payments</p>
-              <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Create Plan</button>
+              <button className="btn btn-primary" onClick={openAdd}>+ Create Plan</button>
             </div>
           ) : (
             <div className="table-container">
               <table>
                 <thead>
                   <tr>
-                    <th>Title</th>
-                    <th>Total</th>
-                    <th>Paid</th>
-                    <th>Remaining</th>
-                    <th>Per Install.</th>
-                    <th>Frequency</th>
-                    <th>Status</th>
-                    <th>Actions</th>
+                    <th>Title</th><th>Total</th><th>Paid</th>
+                    <th>Remaining</th><th>Per Install.</th>
+                    <th>Frequency</th><th>Status</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -153,10 +177,11 @@ export default function Installments() {
                         <td>{i.frequency}</td>
                         <td><span className={`badge ${statusMap[i.status]}`}>{i.status}</span></td>
                         <td>
-                          <div style={{ display: 'flex', gap: '6px' }}>
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                             {i.status === 'Active' && (
                               <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>Pay</button>
                             )}
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(i)}>Edit</button>
                             <button className="btn btn-danger btn-sm" onClick={() => handleDelete(i._id)}>Delete</button>
                           </div>
                         </td>
@@ -170,13 +195,13 @@ export default function Installments() {
         </div>
       </div>
 
-      {/* New Plan Modal */}
+      {/* Add / Edit Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>New Installment Plan</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3>{editRecord ? 'Edit Installment Plan' : 'New Installment Plan'}</h3>
+              <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
@@ -222,9 +247,9 @@ export default function Installments() {
                     onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} />
                 </div>
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Creating...' : 'Create Plan'}
+                    {saving ? 'Saving...' : editRecord ? 'Update Plan' : 'Create Plan'}
                   </button>
                 </div>
               </form>
@@ -249,21 +274,15 @@ export default function Installments() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Paid so far</div>
-                    <div style={{ fontWeight: 700, color: 'var(--success)' }}>
-                      PKR {Number(showPayModal.paidAmount).toLocaleString()}
-                    </div>
+                    <div style={{ fontWeight: 700, color: 'var(--success)' }}>PKR {Number(showPayModal.paidAmount).toLocaleString()}</div>
                   </div>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Remaining</div>
-                    <div style={{ fontWeight: 700, color: 'var(--danger)' }}>
-                      PKR {Math.max(0, showPayModal.totalAmount - showPayModal.paidAmount).toLocaleString()}
-                    </div>
+                    <div style={{ fontWeight: 700, color: 'var(--danger)' }}>PKR {Math.max(0, showPayModal.totalAmount - showPayModal.paidAmount).toLocaleString()}</div>
                   </div>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Suggested</div>
-                    <div style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                      PKR {Number(showPayModal.installmentAmount).toLocaleString()}
-                    </div>
+                    <div style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(showPayModal.installmentAmount).toLocaleString()}</div>
                   </div>
                 </div>
               </div>
@@ -276,9 +295,7 @@ export default function Installments() {
                 </div>
                 <div className="form-group">
                   <label>Note</label>
-                  <input value={payNote}
-                    onChange={e => setPayNote(e.target.value)}
-                    placeholder="e.g. March payment" />
+                  <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="e.g. March payment" />
                 </div>
                 <div className="form-actions">
                   <button type="button" className="btn btn-outline" onClick={() => setShowPayModal(null)}>Cancel</button>

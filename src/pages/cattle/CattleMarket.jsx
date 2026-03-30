@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { cattleAPI, enquiryAPI } from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
@@ -10,24 +10,24 @@ const defaultForm = {
   age: '', weight: '', price: '', location: '', description: ''
 };
 
-const defaultEnquiry = {
-  buyerName: '', buyerPhone: '', offerPrice: '', message: ''
-};
+const defaultEnquiry = { buyerName: '', buyerPhone: '', offerPrice: '', message: '' };
 
 export default function CattleMarket() {
   const { user } = useAuth();
-  const [cattle, setCattle] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [cattle, setCattle]                     = useState([]);
+  const [loading, setLoading]                   = useState(true);
+  const [showModal, setShowModal]               = useState(false);
+  const [editListing, setEditListing]           = useState(null);
   const [showEnquiryModal, setShowEnquiryModal] = useState(null);
-  const [showEnquiriesReceived, setShowEnquiriesReceived] = useState(false);
-  const [form, setForm] = useState(defaultForm);
-  const [enquiryForm, setEnquiryForm] = useState(defaultEnquiry);
-  const [enquiries, setEnquiries] = useState([]);
-  const [search, setSearch] = useState('');
-  const [filterSpecies, setFilterSpecies] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('market');
+  const [form, setForm]                         = useState(defaultForm);
+  const [enquiryForm, setEnquiryForm]           = useState(defaultEnquiry);
+  const [enquiries, setEnquiries]               = useState([]);
+  const [prevEnquiryCount, setPrevEnquiryCount] = useState(0);
+  const [search, setSearch]                     = useState('');
+  const [filterSpecies, setFilterSpecies]       = useState('');
+  const [saving, setSaving]                     = useState(false);
+  const [activeTab, setActiveTab]               = useState('market');
+  const pollRef = useRef(null);
 
   const load = async () => {
     setLoading(true);
@@ -38,30 +38,90 @@ export default function CattleMarket() {
     finally { setLoading(false); }
   };
 
-  const loadEnquiries = async () => {
+  const loadEnquiries = async (notify = false) => {
     try {
       const { data } = await enquiryAPI.received();
-      setEnquiries(data.enquiries || []);
+      const newEnquiries = data.enquiries || [];
+      if (notify && newEnquiries.length > prevEnquiryCount) {
+        const diff = newEnquiries.length - prevEnquiryCount;
+        toast.info(`📬 You have ${diff} new enquir${diff > 1 ? 'ies' : 'y'} on your listings!`, {
+          autoClose: 6000
+        });
+      }
+      setPrevEnquiryCount(newEnquiries.length);
+      setEnquiries(newEnquiries);
     } catch { toast.error('Failed to load enquiries'); }
   };
 
   useEffect(() => { load(); }, [search, filterSpecies]);
-  useEffect(() => { if (activeTab === 'enquiries') loadEnquiries(); }, [activeTab]);
+
+  // Poll for new enquiries every 30 seconds
+  useEffect(() => {
+    loadEnquiries(false);
+    pollRef.current = setInterval(() => loadEnquiries(true), 30000);
+    return () => clearInterval(pollRef.current);
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'enquiries') loadEnquiries(false);
+  }, [activeTab]);
 
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+
+  const openAdd = () => {
+    setEditListing(null);
+    setForm(defaultForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (c) => {
+    setEditListing(c);
+    setForm({
+      tagId:       c.tagId       || '',
+      name:        c.name        || '',
+      species:     c.species     || 'Cow',
+      breed:       c.breed       || '',
+      gender:      c.gender      || 'Female',
+      age:         c.age         || '',
+      weight:      c.weight      || '',
+      price:       c.price       || '',
+      location:    c.location    || '',
+      description: c.description || '',
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditListing(null);
+    setForm(defaultForm);
+  };
 
   const handleList = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await cattleAPI.create(form);
-      toast.success('Animal listed on marketplace! 🏪');
-      setShowModal(false);
-      setForm(defaultForm);
+      if (editListing) {
+        await cattleAPI.update(editListing._id, form);
+        toast.success('Listing updated! ✅');
+      } else {
+        await cattleAPI.create(form);
+        toast.success('Animal listed on marketplace! 🏪');
+      }
+      closeModal();
       load();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to list');
+      toast.error(err.response?.data?.message || 'Failed');
     } finally { setSaving(false); }
+  };
+
+  const handleDeleteListing = async (id) => {
+    if (!window.confirm('Remove this listing from marketplace?')) return;
+    try {
+      await cattleAPI.delete(id);
+      toast.success('Listing removed');
+      load();
+    } catch { toast.error('Failed to remove listing'); }
   };
 
   const handleEnquirySubmit = async (e) => {
@@ -87,29 +147,37 @@ export default function CattleMarket() {
     try {
       await enquiryAPI.update(id, status);
       toast.success(`Enquiry ${status}! ✅`);
-      loadEnquiries();
+      loadEnquiries(false);
     } catch { toast.error('Failed to update'); }
   };
 
   const isMyListing = (c) => c.seller?._id === user?._id || c.seller === user?._id;
 
-  const statusMap = {
-    Pending:  'badge-orange',
-    Accepted: 'badge-green',
-    Rejected: 'badge-red'
-  };
+  const statusMap = { Pending: 'badge-orange', Accepted: 'badge-green', Rejected: 'badge-red' };
+
+  const pendingEnquiries = enquiries.filter(e => e.status === 'Pending').length;
 
   return (
     <div className="page-cattle">
       <div className="page-header">
         <div><h2>🏪 Cattle Marketplace</h2><p>Buy & sell livestock</p></div>
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          <button className="btn btn-outline btn-sm" onClick={() => setActiveTab(activeTab === 'enquiries' ? 'market' : 'enquiries')}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="btn btn-outline btn-sm" style={{ position: 'relative' }}
+            onClick={() => setActiveTab(activeTab === 'enquiries' ? 'market' : 'enquiries')}>
             {activeTab === 'enquiries' ? '🏪 Marketplace' : '📬 My Enquiries'}
+            {pendingEnquiries > 0 && activeTab !== 'enquiries' && (
+              <span style={{
+                position: 'absolute', top: '-8px', right: '-8px',
+                background: 'var(--danger)', color: 'white',
+                borderRadius: '50%', width: '20px', height: '20px',
+                fontSize: '0.7rem', fontWeight: 700,
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                {pendingEnquiries}
+              </span>
+            )}
           </button>
-          <button className="btn btn-primary btn-sm" onClick={() => setShowModal(true)}>
-            + List Animal
-          </button>
+          <button className="btn btn-primary btn-sm" onClick={openAdd}>+ List Animal</button>
         </div>
       </div>
 
@@ -136,14 +204,13 @@ export default function CattleMarket() {
                 <div className="icon">🏪</div>
                 <h3>No listings available</h3>
                 <p>Be the first to list an animal for sale!</p>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ List Animal</button>
+                <button className="btn btn-primary" onClick={openAdd}>+ List Animal</button>
               </div>
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                 {cattle.map(c => (
                   <div key={c._id} className="card">
                     <div style={{ padding: '20px' }}>
-
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                         <div>
                           <h3 style={{ fontSize: '1.1rem', color: 'var(--primary-dark)' }}>
@@ -192,9 +259,10 @@ export default function CattleMarket() {
                         </div>
 
                         {isMyListing(c) ? (
-                          <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                            Your listing
-                          </span>
+                          <div style={{ display: 'flex', gap: '6px' }}>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(c)}>Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteListing(c._id)}>Remove</button>
+                          </div>
                         ) : (
                           <button className="btn btn-primary btn-sm"
                             onClick={() => { setShowEnquiryModal(c); setEnquiryForm({ ...defaultEnquiry, buyerName: user?.name || '', buyerPhone: user?.phone || '' }); }}>
@@ -202,7 +270,6 @@ export default function CattleMarket() {
                           </button>
                         )}
                       </div>
-
                     </div>
                   </div>
                 ))}
@@ -215,8 +282,17 @@ export default function CattleMarket() {
         {activeTab === 'enquiries' && (
           <div className="card">
             <div className="card-header">
-              <h3>📬 Enquiries Received</h3>
-              <button className="btn btn-outline btn-sm" onClick={loadEnquiries}>🔄 Refresh</button>
+              <h3>📬 Enquiries Received
+                {pendingEnquiries > 0 && (
+                  <span style={{
+                    marginLeft: '8px', background: 'var(--danger)', color: 'white',
+                    borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem'
+                  }}>
+                    {pendingEnquiries} pending
+                  </span>
+                )}
+              </h3>
+              <button className="btn btn-outline btn-sm" onClick={() => loadEnquiries(false)}>🔄 Refresh</button>
             </div>
             {enquiries.length === 0 ? (
               <div className="empty-state" style={{ padding: '40px' }}>
@@ -229,13 +305,8 @@ export default function CattleMarket() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Animal</th>
-                      <th>Buyer Name</th>
-                      <th>Phone</th>
-                      <th>Offer Price</th>
-                      <th>Message</th>
-                      <th>Status</th>
-                      <th>Actions</th>
+                      <th>Animal</th><th>Buyer Name</th><th>Phone</th>
+                      <th>Offer Price</th><th>Message</th><th>Status</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -261,9 +332,7 @@ export default function CattleMarket() {
                         <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {eq.message || '—'}
                         </td>
-                        <td>
-                          <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
-                        </td>
+                        <td><span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span></td>
                         <td>
                           {eq.status === 'Pending' && (
                             <div style={{ display: 'flex', gap: '6px' }}>
@@ -293,13 +362,13 @@ export default function CattleMarket() {
         )}
       </div>
 
-      {/* List Animal Modal */}
+      {/* List / Edit Modal */}
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>List Animal for Sale</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3>{editListing ? 'Edit Listing' : 'List Animal for Sale'}</h3>
+              <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleList}>
@@ -323,8 +392,7 @@ export default function CattleMarket() {
                   <div className="form-group">
                     <label>Gender *</label>
                     <select name="gender" value={form.gender} onChange={handleChange}>
-                      <option>Female</option>
-                      <option>Male</option>
+                      <option>Female</option><option>Male</option>
                     </select>
                   </div>
                 </div>
@@ -358,9 +426,9 @@ export default function CattleMarket() {
                     rows={3} placeholder="Describe the animal..." style={{ resize: 'vertical' }} />
                 </div>
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Listing...' : 'List for Sale'}
+                    {saving ? 'Saving...' : editListing ? 'Update Listing' : 'List for Sale'}
                   </button>
                 </div>
               </form>
@@ -378,8 +446,6 @@ export default function CattleMarket() {
               <button className="modal-close" onClick={() => setShowEnquiryModal(null)}>✕</button>
             </div>
             <div className="modal-body">
-
-              {/* Animal Info */}
               <div style={{ background: '#f4faf5', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
                 <div style={{ fontWeight: 700, color: 'var(--primary-dark)', marginBottom: '4px' }}>
                   {showEnquiryModal.name || `${showEnquiryModal.species} #${showEnquiryModal.tagId}`}
@@ -394,7 +460,6 @@ export default function CattleMarket() {
                   Seller: {showEnquiryModal.seller?.farmName || showEnquiryModal.seller?.name}
                 </div>
               </div>
-
               <form onSubmit={handleEnquirySubmit}>
                 <div className="form-row">
                   <div className="form-group">

@@ -8,11 +8,12 @@ const defaultForm = {
 };
 
 export default function Vouchers() {
-  const [vouchers, setVouchers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState(defaultForm);
-  const [saving, setSaving] = useState(false);
+  const [vouchers, setVouchers]     = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [showModal, setShowModal]   = useState(false);
+  const [editRecord, setEditRecord] = useState(null);
+  const [form, setForm]             = useState(defaultForm);
+  const [saving, setSaving]         = useState(false);
   const [filterType, setFilterType] = useState('');
 
   const load = async () => {
@@ -26,14 +27,41 @@ export default function Vouchers() {
 
   useEffect(() => { load(); }, [filterType]);
 
+  const openAdd = () => {
+    setEditRecord(null);
+    setForm(defaultForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (v) => {
+    setEditRecord(v);
+    setForm({
+      type:        v.type        || 'Purchase',
+      amount:      v.amount      || '',
+      description: v.description || '',
+      date:        v.date ? v.date.split('T')[0] : '',
+    });
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setShowModal(false);
+    setEditRecord(null);
+    setForm(defaultForm);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await vouchersAPI.create(form);
-      toast.success('Voucher created! 🧾');
-      setShowModal(false);
-      setForm(defaultForm);
+      if (editRecord) {
+        await vouchersAPI.update(editRecord._id, form);
+        toast.success('Voucher updated! ✅');
+      } else {
+        await vouchersAPI.create(form);
+        toast.success('Voucher created! 🧾');
+      }
+      closeModal();
       load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed');
@@ -63,17 +91,16 @@ export default function Vouchers() {
     <div className="page-vouchers">
       <div className="page-header">
         <div><h2>🧾 My Vouchers</h2><p>Financial records & transactions</p></div>
-        <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Voucher</button>
+        <button className="btn btn-primary" onClick={openAdd}>+ New Voucher</button>
       </div>
 
       <div className="page-content">
-
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
-            { label: 'Total Vouchers',  value: vouchers.length,                     icon: '🧾', cls: 'blue',   big: false },
-            { label: 'Total Income',    value: `PKR ${totalIncome.toLocaleString()}`, icon: '📥', cls: 'green',  big: true  },
-            { label: 'Total Expenses',  value: `PKR ${totalExpense.toLocaleString()}`,icon: '📤', cls: 'orange', big: true  },
-            { label: 'Net Balance',     value: `PKR ${netBalance.toLocaleString()}`,  icon: '💰', cls: 'purple', big: true  },
+            { label: 'Total Vouchers', value: vouchers.length,                      icon: '🧾', cls: 'blue',   big: false },
+            { label: 'Total Income',   value: `PKR ${totalIncome.toLocaleString()}`, icon: '📥', cls: 'green',  big: true  },
+            { label: 'Total Expenses', value: `PKR ${totalExpense.toLocaleString()}`,icon: '📤', cls: 'orange', big: true  },
+            { label: 'Net Balance',    value: `PKR ${netBalance.toLocaleString()}`,  icon: '💰', cls: 'purple', big: true  },
           ].map(s => (
             <div className="stat-card" key={s.label}>
               <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
@@ -83,9 +110,7 @@ export default function Vouchers() {
                   color: s.label === 'Net Balance'
                     ? netBalance >= 0 ? 'var(--success)' : 'var(--danger)'
                     : undefined
-                }}>
-                  {s.value}
-                </div>
+                }}>{s.value}</div>
                 <div className="label">{s.label}</div>
               </div>
             </div>
@@ -96,9 +121,7 @@ export default function Vouchers() {
           <select className="search-input" style={{ flex: 'none', width: 'auto' }}
             value={filterType} onChange={e => setFilterType(e.target.value)}>
             <option value="">All Types</option>
-            {['Purchase', 'Sale', 'Expense', 'Income'].map(t => (
-              <option key={t}>{t}</option>
-            ))}
+            {['Purchase', 'Sale', 'Expense', 'Income'].map(t => <option key={t}>{t}</option>)}
           </select>
         </div>
 
@@ -110,19 +133,15 @@ export default function Vouchers() {
               <div className="icon">🧾</div>
               <h3>No vouchers yet</h3>
               <p>Start recording your financial transactions</p>
-              <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ Create Voucher</button>
+              <button className="btn btn-primary" onClick={openAdd}>+ Create Voucher</button>
             </div>
           ) : (
             <div className="table-container">
               <table>
                 <thead>
                   <tr>
-                    <th>Voucher #</th>
-                    <th>Type</th>
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Date</th>
-                    <th>Actions</th>
+                    <th>Voucher #</th><th>Type</th><th>Description</th>
+                    <th>Amount</th><th>Date</th><th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -140,7 +159,10 @@ export default function Vouchers() {
                       </td>
                       <td>{new Date(v.date).toLocaleDateString()}</td>
                       <td>
-                        <button className="btn btn-danger btn-sm" onClick={() => handleDelete(v._id)}>Delete</button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button className="btn btn-outline btn-sm" onClick={() => openEdit(v)}>Edit</button>
+                          <button className="btn btn-danger btn-sm" onClick={() => handleDelete(v._id)}>Delete</button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -152,22 +174,19 @@ export default function Vouchers() {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+        <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>New Voucher</h3>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
+              <h3>{editRecord ? 'Edit Voucher' : 'New Voucher'}</h3>
+              <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleSubmit}>
                 <div className="form-row">
                   <div className="form-group">
                     <label>Type *</label>
-                    <select value={form.type}
-                      onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
-                      {['Purchase', 'Sale', 'Expense', 'Income'].map(t => (
-                        <option key={t}>{t}</option>
-                      ))}
+                    <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}>
+                      {['Purchase', 'Sale', 'Expense', 'Income'].map(t => <option key={t}>{t}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
@@ -197,15 +216,13 @@ export default function Vouchers() {
                     <div style={{ fontSize: '1.2rem', fontWeight: 700, color: isIncome(form.type) ? 'var(--success)' : 'var(--danger)' }}>
                       {isIncome(form.type) ? '+' : '-'} PKR {Number(form.amount).toLocaleString()}
                     </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                      {form.description || 'No description'}
-                    </div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{form.description || 'No description'}</div>
                   </div>
                 )}
                 <div className="form-actions">
-                  <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>
+                  <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Creating...' : 'Create Voucher'}
+                    {saving ? 'Saving...' : editRecord ? 'Update Voucher' : 'Create Voucher'}
                   </button>
                 </div>
               </form>

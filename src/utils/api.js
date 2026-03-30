@@ -52,17 +52,27 @@ export const feedingAPI = {
   delete:  (id)       => API.delete(`/feeding/${id}`),
 };
 
-export const installmentsAPI = {
-  getAll:  ()           => API.get('/installments'),
-  create:  (data)       => API.post('/installments', data),
-  pay:     (id, data)   => API.post(`/installments/${id}/pay`, data),
-  delete:  (id)         => API.delete(`/installments/${id}`),
+export const cattleAPI = {
+  getAll:  (params)   => API.get('/cattle', { params }),
+  create:  (data)     => API.post('/cattle', data),
+  update:  (id, data) => API.put(`/cattle/${id}`, data),
+  delete:  (id)       => API.delete(`/cattle/${id}`),
+  buy:     (id)       => API.post(`/cattle/${id}/buy`),
 };
 
 export const vouchersAPI = {
-  getAll:  (params) => API.get('/vouchers', { params }),
-  create:  (data)   => API.post('/vouchers', data),
-  delete:  (id)     => API.delete(`/vouchers/${id}`),
+  getAll:  (params)   => API.get('/vouchers', { params }),
+  create:  (data)     => API.post('/vouchers', data),
+  update:  (id, data) => API.put(`/vouchers/${id}`, data),
+  delete:  (id)       => API.delete(`/vouchers/${id}`),
+};
+
+export const installmentsAPI = {
+  getAll:  ()           => API.get('/installments'),
+  create:  (data)       => API.post('/installments', data),
+  update:  (id, data)   => API.put(`/installments/${id}`, data),
+  pay:     (id, data)   => API.post(`/installments/${id}/pay`, data),
+  delete:  (id)         => API.delete(`/installments/${id}`),
 };
 
 export const progressAPI = {
@@ -71,13 +81,6 @@ export const progressAPI = {
   update:  (id, data) => API.put(`/progress/${id}`, data),
   delete:  (id)       => API.delete(`/progress/${id}`),
 };
-
-export const cattleAPI = {
-  getAll:  (params) => API.get('/cattle', { params }),
-  create:  (data)   => API.post('/cattle', data),
-  buy:     (id)     => API.post(`/cattle/${id}/buy`),
-};
-
 export const enquiryAPI = {
   submit:   (data)       => API.post('/enquiries', data),
   received: ()           => API.get('/enquiries/received'),
