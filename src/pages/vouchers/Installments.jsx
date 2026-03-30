@@ -77,8 +77,8 @@ export default function Installments() {
   const totalRemaining = installments.reduce((s, i) => s + Math.max(0, i.totalAmount - i.paidAmount), 0);
 
   return (
-    <div>
-      <div className="page-installments">
+    <div className="page-installments">
+      <div className="page-header">
         <div><h2>💳 My Installments</h2><p>Track your payment plans</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Plan</button>
       </div>

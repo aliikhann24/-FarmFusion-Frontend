@@ -55,11 +55,10 @@ export default function Profile() {
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
 
   return (
-    <div>
-      <div className="page-profile">
+    <div className="page-profile">
+      <div className="page-header">
         <div><h2>👤 My Profile</h2><p>Manage your account details</p></div>
       </div>
-
       <div className="page-content">
         <div className="profile-grid">
 

@@ -92,7 +92,7 @@ export default function BreedingRecords() {
   const females = animals.filter(a => a.gender === 'Female');
   const males   = animals.filter(a => a.gender === 'Male');
 
-  return (
+ return (
     <div className="page-breeding">
       <div className="page-header">
         <div><h2>🧬 Breeding Records</h2><p>Track animal breeding history</p></div>

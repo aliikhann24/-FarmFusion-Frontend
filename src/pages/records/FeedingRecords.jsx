@@ -90,7 +90,7 @@ export default function FeedingRecords() {
   const uniqueAnimals = [...new Set(records.map(r => r.animal?._id))].length;
   const feedTypes     = [...new Set(records.map(r => r.feedType))].length;
 
-  return (
+ return (
     <div className="page-feeding">
       <div className="page-header">
         <div><h2>🌾 Feeding Records</h2><p>Track animal feed & nutrition</p></div>

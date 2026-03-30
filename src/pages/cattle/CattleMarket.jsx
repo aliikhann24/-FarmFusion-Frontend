@@ -100,8 +100,8 @@ export default function CattleMarket() {
   };
 
   return (
-    <div>
-      <div className="page-cattle">
+    <div className="page-cattle">
+      <div className="page-header">
         <div><h2>🏪 Cattle Marketplace</h2><p>Buy & sell livestock</p></div>
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button className="btn btn-outline btn-sm" onClick={() => setActiveTab(activeTab === 'enquiries' ? 'market' : 'enquiries')}>

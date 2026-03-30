@@ -198,9 +198,9 @@ export default function AnimalProgress() {
     ? (records.filter(r => r.milkProduction).reduce((s, r) => s + r.milkProduction, 0) / records.filter(r => r.milkProduction).length).toFixed(1)
     : 0;
 
-  return (
-    <div>
-      <div className="page-progress">
+ return (
+    <div className="page-progress">
+      <div className="page-header">
         <div><h2>📈 Animal Progress</h2><p>Track health & growth over time</p></div>
         <button className="btn btn-primary" onClick={openAdd}>+ Add Progress</button>
       </div>

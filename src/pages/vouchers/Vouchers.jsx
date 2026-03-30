@@ -60,8 +60,8 @@ export default function Vouchers() {
   const netBalance   = totalIncome - totalExpense;
 
   return (
-    <div>
-      <div className="page-vouchers">
+    <div className="page-vouchers">
+      <div className="page-header">
         <div><h2>🧾 My Vouchers</h2><p>Financial records & transactions</p></div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>+ New Voucher</button>
       </div>
