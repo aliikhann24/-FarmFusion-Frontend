@@ -1,17 +1,19 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
+import { enquiryAPI } from '../../utils/api';
 
 const navItems = [
   { section: 'Overview', items: [
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
   ]},
   { section: 'My Farm', items: [
-    { path: '/my-animals',       label: 'My Animals',       icon: '🐄' },
-    { path: '/breeding-records', label: 'Breeding Records',  icon: '🧬' },
-    { path: '/feeding-records',  label: 'Feeding Records',   icon: '🌾' },
-    { path: '/animal-progress',  label: 'Animal Progress',   icon: '📈' },
+    { path: '/my-animals',          label: 'My Animals',      icon: '🐄' },
+    { path: '/breeding-records',    label: 'Breeding Records', icon: '🧬' },
+    { path: '/feeding-records',     label: 'Feeding Records',  icon: '🌾' },
+    { path: '/animal-progress',     label: 'Animal Progress',  icon: '📈' },
+    { path: '/vaccination-records', label: 'Vaccinations',     icon: '💉' },
   ]},
   { section: 'Marketplace', items: [
     { path: '/cattle', label: 'Cattle Market', icon: '🏪' },
@@ -28,7 +30,32 @@ const navItems = [
 export default function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen]           = useState(false);
+  const [pendingEnquiries, setPendingEnquiries] = useState(0);
+  const prevCountRef  = useRef(0);
+  const pollRef       = useRef(null);
+  const isFirstLoad   = useRef(true);
+
+  // ===== ENQUIRY POLLING =====
+  const checkEnquiries = async () => {
+    try {
+      const { data } = await enquiryAPI.received();
+      const pending = (data.enquiries || []).filter(e => e.status === 'Pending').length;
+      if (!isFirstLoad.current && pending > prevCountRef.current) {
+        const diff = pending - prevCountRef.current;
+        toast.info(`📬 ${diff} new enquir${diff > 1 ? 'ies' : 'y'} on your listings!`, { autoClose: 6000 });
+      }
+      isFirstLoad.current  = false;
+      prevCountRef.current = pending;
+      setPendingEnquiries(pending);
+    } catch {}
+  };
+
+  useEffect(() => {
+    checkEnquiries();
+    pollRef.current = setInterval(checkEnquiries, 30000);
+    return () => clearInterval(pollRef.current);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -44,14 +71,10 @@ export default function Layout() {
 
       {/* ===== OVERLAY ===== */}
       {sidebarOpen && (
-        <div
-          onClick={closeSidebar}
-          style={{
-            position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 199
-          }}
-        />
+        <div onClick={closeSidebar} style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.5)', zIndex: 199
+        }} />
       )}
 
       {/* ===== SIDEBAR ===== */}
@@ -74,6 +97,18 @@ export default function Layout() {
                 >
                   <span>{item.icon}</span>
                   {item.label}
+                  {/* 🔴 Badge on Cattle Market */}
+                  {item.path === '/cattle' && pendingEnquiries > 0 && (
+                    <span style={{
+                      marginLeft: 'auto',
+                      background: 'var(--danger)', color: 'white',
+                      borderRadius: '10px', padding: '1px 7px',
+                      fontSize: '0.7rem', fontWeight: 700,
+                      minWidth: '20px', textAlign: 'center'
+                    }}>
+                      {pendingEnquiries}
+                    </span>
+                  )}
                 </NavLink>
               ))}
             </div>
@@ -92,15 +127,33 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT ===== */}
+      {/* ===== MAIN CONTENT — UNCHANGED ===== */}
       <main className="main-content">
 
-        {/* Mobile topbar — INSIDE main-content at very top */}
+        {/* Mobile topbar — INSIDE main-content, unchanged */}
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
           <div className="mobile-logo">Farm<span>Fusion</span></div>
-          <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
-            {initials}
+          {/* 🔴 Bell with badge on mobile */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button onClick={() => navigate('/cattle')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative', padding: '4px' }}>
+              <span style={{ fontSize: '1.2rem' }}>📬</span>
+              {pendingEnquiries > 0 && (
+                <span style={{
+                  position: 'absolute', top: '-2px', right: '-2px',
+                  background: 'var(--danger)', color: 'white',
+                  borderRadius: '50%', width: '16px', height: '16px',
+                  fontSize: '0.6rem', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center'
+                }}>
+                  {pendingEnquiries}
+                </span>
+              )}
+            </button>
+            <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
+              {initials}
+            </div>
           </div>
         </div>
 
