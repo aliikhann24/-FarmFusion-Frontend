@@ -13,30 +13,36 @@ const defaultForm = {
 
 const defaultEnquiry = { buyerName: '', buyerPhone: '', offerPrice: '', message: '' };
 
-// Compress image to under 500KB
+// ✅ Fixed compressImage using FileReader
 const compressImage = (file) => {
-  return new Promise((resolve) => {
-    const canvas = document.createElement('canvas');
-    const ctx    = canvas.getContext('2d');
-    const img    = new Image();
-    img.onload = () => {
-      let { width, height } = img;
-      const maxDim = 1000;
-      if (width > maxDim || height > maxDim) {
-        if (width > height) { height = (height / width) * maxDim; width = maxDim; }
-        else { width = (width / height) * maxDim; height = maxDim; }
-      }
-      canvas.width = width; canvas.height = height;
-      ctx.drawImage(img, 0, 0, width, height);
-      let quality = 0.8;
-      let result  = canvas.toDataURL('image/jpeg', quality);
-      while (result.length > 500 * 1024 * 1.37 && quality > 0.2) {
-        quality -= 0.1;
-        result = canvas.toDataURL('image/jpeg', quality);
-      }
-      resolve(result);
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx    = canvas.getContext('2d');
+        let { width, height } = img;
+        const maxDim = 1000;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) { height = Math.round((height / width) * maxDim); width = maxDim; }
+          else { width = Math.round((width / height) * maxDim); height = maxDim; }
+        }
+        canvas.width = width; canvas.height = height;
+        ctx.drawImage(img, 0, 0, width, height);
+        let quality = 0.8;
+        let result  = canvas.toDataURL('image/jpeg', quality);
+        while (result.length > 500 * 1024 * 1.37 && quality > 0.2) {
+          quality -= 0.1;
+          result = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve(result);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
     };
-    img.src = URL.createObjectURL(file);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 };
 
@@ -56,9 +62,10 @@ export default function CattleMarket() {
   const [filterSpecies, setFilterSpecies]       = useState('');
   const [saving, setSaving]                     = useState(false);
   const [activeTab, setActiveTab]               = useState('market');
-  const pollRef   = useRef(null);
-  const imageRef  = useRef();
+  const pollRef  = useRef(null);
+  const imageRef = useRef();
 
+  // ===== LOAD =====
   const load = async () => {
     setLoading(true);
     try {
@@ -68,24 +75,22 @@ export default function CattleMarket() {
     finally { setLoading(false); }
   };
 
-  const loadEnquiries = async (notify = false) => {
+  const loadEnquiries = async () => {
     try {
-      const { data }     = await enquiryAPI.received();
-      const newEnquiries = data.enquiries || [];
-      setEnquiries(newEnquiries);
+      const { data } = await enquiryAPI.received();
+      setEnquiries(data.enquiries || []);
     } catch {}
   };
 
   useEffect(() => { load(); }, [search, filterSpecies]);
   useEffect(() => {
-    loadEnquiries(false);
-    pollRef.current = setInterval(() => loadEnquiries(true), 30000);
+    loadEnquiries();
+    pollRef.current = setInterval(loadEnquiries, 30000);
     return () => clearInterval(pollRef.current);
   }, []);
-  useEffect(() => { if (activeTab === 'enquiries') loadEnquiries(false); }, [activeTab]);
+  useEffect(() => { if (activeTab === 'enquiries') loadEnquiries(); }, [activeTab]);
 
-  const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
-
+  // ===== IMAGE =====
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -97,8 +102,10 @@ export default function CattleMarket() {
       setForm(p => ({ ...p, imageBase64: base64, imageMimeType: 'image/jpeg' }));
       setImagePreview(compressed);
       toast.success('Image ready ✅');
-    } catch { toast.error('Failed to process image'); }
-    finally { setCompressing(false); }
+    } catch (err) {
+      console.error('Image error:', err);
+      toast.error('Failed to process image');
+    } finally { setCompressing(false); }
   };
 
   const removeImage = () => {
@@ -107,6 +114,7 @@ export default function CattleMarket() {
     if (imageRef.current) imageRef.current.value = '';
   };
 
+  // ===== MODAL OPEN/CLOSE =====
   const openAdd = () => {
     setEditListing(null);
     setForm(defaultForm);
@@ -135,6 +143,7 @@ export default function CattleMarket() {
     setImagePreview(null);
   };
 
+  // ===== SUBMIT LISTING =====
   const handleList = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -144,36 +153,42 @@ export default function CattleMarket() {
         toast.success('Listing updated! ✅');
       } else {
         await cattleAPI.create(form);
-        toast.success('Animal listed on marketplace! 🏪');
+        toast.success('Animal listed! 🏪');
       }
       closeModal();
       load();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed');
+      console.error('Submit error:', err.response?.data || err);
+      toast.error(err.response?.data?.message || 'Failed to save listing');
     } finally { setSaving(false); }
   };
 
+  // ===== DELETE LISTING =====
   const handleDeleteListing = async (id) => {
     if (!window.confirm('Remove this listing from marketplace?')) return;
     try {
       await cattleAPI.delete(id);
       toast.success('Listing removed');
       load();
-    } catch { toast.error('Failed to remove listing'); }
+    } catch (err) {
+      console.error('Delete error:', err.response?.data || err);
+      toast.error('Failed to remove listing');
+    }
   };
 
+  // ===== ENQUIRY SUBMIT =====
   const handleEnquirySubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
       await enquiryAPI.submit({
-        cattleId: showEnquiryModal._id,
-        buyerName: enquiryForm.buyerName,
+        cattleId:   showEnquiryModal._id,
+        buyerName:  enquiryForm.buyerName,
         buyerPhone: enquiryForm.buyerPhone,
         offerPrice: enquiryForm.offerPrice,
-        message: enquiryForm.message
+        message:    enquiryForm.message
       });
-      toast.success('Enquiry sent to seller! ✅');
+      toast.success('Enquiry sent! ✅');
       setShowEnquiryModal(null);
       setEnquiryForm(defaultEnquiry);
     } catch (err) {
@@ -181,17 +196,29 @@ export default function CattleMarket() {
     } finally { setSaving(false); }
   };
 
+  // ===== ENQUIRY STATUS =====
   const handleEnquiryStatus = async (id, status) => {
     try {
       await enquiryAPI.update(id, status);
       toast.success(`Enquiry ${status}! ✅`);
-      loadEnquiries(false);
+      loadEnquiries();
     } catch { toast.error('Failed to update'); }
   };
 
-  const isMyListing = (c) => c.seller?._id === user?._id || c.seller === user?._id;
-  const statusMap   = { Pending: 'badge-orange', Accepted: 'badge-green', Rejected: 'badge-red' };
+  // ===== DELETE ENQUIRY =====
+  const handleDeleteEnquiry = async (id) => {
+    if (!window.confirm('Delete this enquiry?')) return;
+    try {
+      await enquiryAPI.delete(id);
+      toast.success('Enquiry deleted');
+      loadEnquiries();
+    } catch { toast.error('Failed to delete enquiry'); }
+  };
+
+  const isMyListing      = (c) => c.seller?._id === user?._id || c.seller === user?._id;
+  const statusMap        = { Pending: 'badge-orange', Accepted: 'badge-green', Rejected: 'badge-red' };
   const pendingEnquiries = enquiries.filter(e => e.status === 'Pending').length;
+  const handleChange     = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
 
   return (
     <div className="page-cattle">
@@ -217,6 +244,7 @@ export default function CattleMarket() {
 
       <div className="page-content">
 
+        {/* ===== MARKETPLACE TAB ===== */}
         {activeTab === 'market' && (
           <>
             <div className="filter-bar">
@@ -241,86 +269,82 @@ export default function CattleMarket() {
             ) : (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
                 {cattle.map(c => (
-                  <div key={c._id} className="card">
+                  <div key={c._id} className="card" style={{ overflow: 'hidden' }}>
 
-                    {/* 🖼️ Animal image at top of card */}
+                    {/* ✅ Animal Image */}
                     {c.imageBase64 ? (
                       <img
-                        src={`data:${c.imageMimeType};base64,${c.imageBase64}`}
+                        src={`data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}`}
                         alt={c.name || c.species}
-                        style={{
-                          width: '100%', height: '180px',
-                          objectFit: 'cover',
-                          borderRadius: '12px 12px 0 0'
-                        }}
+                        style={{ width: '100%', height: '200px', objectFit: 'cover', display: 'block' }}
                       />
                     ) : (
                       <div style={{
-                        width: '100%', height: '120px',
+                        width: '100%', height: '140px',
                         background: 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
-                        borderRadius: '12px 12px 0 0',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '3rem'
-                      }}>
-                        🐄
-                      </div>
+                        display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', fontSize: '3.5rem'
+                      }}>🐄</div>
                     )}
 
-                    <div style={{ padding: '20px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    <div style={{ padding: '16px 20px 20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                         <div>
-                          <h3 style={{ fontSize: '1.1rem', color: 'var(--primary-dark)' }}>
+                          <h3 style={{ fontSize: '1.05rem', color: 'var(--primary-dark)', marginBottom: '2px' }}>
                             {c.name || `${c.species} #${c.tagId}`}
                           </h3>
-                          <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-                            Tag: {c.tagId} • {c.gender}
-                          </p>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>Tag: {c.tagId} • {c.gender}</p>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
                           <span className="badge badge-green">{c.species}</span>
                           {isMyListing(c) && (
-                            <span className="badge badge-blue" style={{ fontSize: '0.68rem' }}>My Listing</span>
+                            <span className="badge badge-blue" style={{ fontSize: '0.65rem' }}>My Listing</span>
                           )}
                         </div>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginBottom: '14px' }}>
                         {[
                           ['Breed',    c.breed    || '—'],
                           ['Age',      c.age      ? `${c.age} yrs` : '—'],
                           ['Weight',   c.weight   ? `${c.weight} kg` : '—'],
                           ['Location', c.location || '—'],
                         ].map(([k, v]) => (
-                          <div key={k} style={{ background: '#f8faf8', borderRadius: '8px', padding: '8px 12px' }}>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{k}</div>
-                            <div style={{ fontSize: '0.88rem', fontWeight: 500 }}>{v}</div>
+                          <div key={k} style={{ background: '#f8faf8', borderRadius: '8px', padding: '7px 10px' }}>
+                            <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{k}</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 500, marginTop: '1px' }}>{v}</div>
                           </div>
                         ))}
                       </div>
 
                       {c.description && (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                        <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)', marginBottom: '12px', lineHeight: 1.5 }}>
                           {c.description}
                         </p>
                       )}
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                         <div>
-                          <div style={{ fontSize: '1.4rem', fontWeight: 700, color: 'var(--primary)' }}>
+                          <div style={{ fontSize: '1.35rem', fontWeight: 700, color: 'var(--primary)' }}>
                             PKR {Number(c.price).toLocaleString()}
                           </div>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>
                             Seller: {c.seller?.farmName || c.seller?.name || 'Unknown'}
                           </div>
                         </div>
+
+                        {/* ✅ Edit/Delete for my listings, Enquire for others */}
                         {isMyListing(c) ? (
                           <div style={{ display: 'flex', gap: '6px' }}>
-                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(c)}>Edit</button>
-                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteListing(c._id)}>Remove</button>
+                            <button className="btn btn-outline btn-sm" onClick={() => openEdit(c)}>✏️ Edit</button>
+                            <button className="btn btn-danger btn-sm" onClick={() => handleDeleteListing(c._id)}>🗑 Remove</button>
                           </div>
                         ) : (
                           <button className="btn btn-primary btn-sm"
-                            onClick={() => { setShowEnquiryModal(c); setEnquiryForm({ ...defaultEnquiry, buyerName: user?.name || '', buyerPhone: user?.phone || '' }); }}>
+                            onClick={() => {
+                              setShowEnquiryModal(c);
+                              setEnquiryForm({ ...defaultEnquiry, buyerName: user?.name || '', buyerPhone: user?.phone || '' });
+                            }}>
                             📬 Enquire
                           </button>
                         )}
@@ -333,6 +357,7 @@ export default function CattleMarket() {
           </>
         )}
 
+        {/* ===== ENQUIRIES TAB ===== */}
         {activeTab === 'enquiries' && (
           <div className="card">
             <div className="card-header">
@@ -343,8 +368,9 @@ export default function CattleMarket() {
                   </span>
                 )}
               </h3>
-              <button className="btn btn-outline btn-sm" onClick={() => loadEnquiries(false)}>🔄 Refresh</button>
+              <button className="btn btn-outline btn-sm" onClick={loadEnquiries}>🔄 Refresh</button>
             </div>
+
             {enquiries.length === 0 ? (
               <div className="empty-state" style={{ padding: '40px' }}>
                 <div className="icon">📬</div>
@@ -356,8 +382,8 @@ export default function CattleMarket() {
                 <table>
                   <thead>
                     <tr>
-                      <th>Animal</th><th>Buyer Name</th><th>Phone</th>
-                      <th>Offer Price</th><th>Message</th><th>Status</th><th>Actions</th>
+                      <th>Animal</th><th>Buyer</th><th>Phone</th>
+                      <th>Offer</th><th>Message</th><th>Status</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -365,27 +391,49 @@ export default function CattleMarket() {
                       <tr key={eq._id}>
                         <td>
                           <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
-                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            {eq.cattle?.species} • PKR {Number(eq.cattle?.price).toLocaleString()}
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
                           </div>
                         </td>
-                        <td>{eq.buyerName}</td>
-                        <td><a href={`tel:${eq.buyerPhone}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>{eq.buyerPhone}</a></td>
-                        <td>{eq.offerPrice ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span> : '—'}</td>
-                        <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{eq.message || '—'}</td>
+                        <td><strong>{eq.buyerName}</strong></td>
+                        <td>
+                          <a href={`tel:${eq.buyerPhone}`} style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                            {eq.buyerPhone}
+                          </a>
+                        </td>
+                        <td>
+                          {eq.offerPrice
+                            ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
+                            : '—'}
+                        </td>
+                        <td style={{ maxWidth: '160px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {eq.message || '—'}
+                        </td>
                         <td><span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span></td>
                         <td>
-                          {eq.status === 'Pending' && (
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              <button className="btn btn-sm"
-                                style={{ background: '#e8f5e9', color: '#2e7d32', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontWeight: 600 }}
-                                onClick={() => handleEnquiryStatus(eq._id, 'Accepted')}>✅ Accept</button>
-                              <button className="btn btn-sm"
-                                style={{ background: '#fde8ea', color: '#c62828', border: 'none', borderRadius: '6px', padding: '6px 12px', cursor: 'pointer', fontWeight: 600 }}
-                                onClick={() => handleEnquiryStatus(eq._id, 'Rejected')}>❌ Reject</button>
-                            </div>
-                          )}
-                          {eq.status !== 'Pending' && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>Done</span>}
+                          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                            {/* ✅ Accept / Reject for pending */}
+                            {eq.status === 'Pending' && (
+                              <>
+                                <button className="btn btn-sm"
+                                  style={{ background: '#e8f5e9', color: '#2e7d32', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                                  onClick={() => handleEnquiryStatus(eq._id, 'Accepted')}>
+                                  ✅ Accept
+                                </button>
+                                <button className="btn btn-sm"
+                                  style={{ background: '#fde8ea', color: '#c62828', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                                  onClick={() => handleEnquiryStatus(eq._id, 'Rejected')}>
+                                  ❌ Reject
+                                </button>
+                              </>
+                            )}
+                            {/* ✅ Delete always available */}
+                            <button className="btn btn-sm"
+                              style={{ background: '#fde8ea', color: '#c62828', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                              onClick={() => handleDeleteEnquiry(eq._id)}>
+                              🗑 Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -402,36 +450,37 @@ export default function CattleMarket() {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editListing ? 'Edit Listing' : 'List Animal for Sale'}</h3>
+              <h3>{editListing ? '✏️ Edit Listing' : '🏪 List Animal for Sale'}</h3>
               <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
             <div className="modal-body">
               <form onSubmit={handleList}>
 
-                {/* 🖼️ Image Upload */}
+                {/* ✅ Image Upload */}
                 <div className="form-group">
                   <label>📸 Animal Photo (optional)</label>
                   {!imagePreview ? (
                     <div className="upload-box"
-                      onClick={() => !compressing && imageRef.current.click()}
+                      onClick={() => !compressing && imageRef.current?.click()}
                       style={{ opacity: compressing ? 0.6 : 1, cursor: compressing ? 'not-allowed' : 'pointer' }}>
                       <div style={{ fontSize: '2rem' }}>{compressing ? '⏳' : '🖼️'}</div>
                       <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--primary)' }}>
-                        {compressing ? 'Compressing...' : 'Click to upload photo'}
+                        {compressing ? 'Compressing image...' : 'Click to upload photo'}
                       </div>
-                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>JPG, PNG up to 5MB</div>
+                      <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>JPG, PNG up to 5MB — auto compressed</div>
                       <input ref={imageRef} type="file" accept="image/*"
                         onChange={handleImageChange} style={{ display: 'none' }} />
                     </div>
                   ) : (
                     <div style={{ position: 'relative' }}>
                       <img src={imagePreview} alt="preview"
-                        style={{ width: '100%', height: '180px', objectFit: 'cover', borderRadius: '10px', border: '2px solid var(--border)' }} />
+                        style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '10px', border: '2px solid var(--border)' }} />
                       <button type="button" onClick={removeImage} style={{
                         position: 'absolute', top: '8px', right: '8px',
-                        background: 'rgba(0,0,0,0.6)', color: 'white',
+                        background: 'rgba(0,0,0,0.65)', color: 'white',
                         border: 'none', borderRadius: '50%',
-                        width: '28px', height: '28px', cursor: 'pointer', fontSize: '0.9rem'
+                        width: '30px', height: '30px', cursor: 'pointer', fontSize: '1rem',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
                       }}>✕</button>
                     </div>
                   )}
@@ -493,7 +542,7 @@ export default function CattleMarket() {
                 <div className="form-actions">
                   <button type="button" className="btn btn-outline" onClick={closeModal}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving || compressing}>
-                    {saving ? 'Saving...' : editListing ? 'Update Listing' : 'List for Sale'}
+                    {saving ? 'Saving...' : editListing ? 'Update Listing ✅' : 'List for Sale 🏪'}
                   </button>
                 </div>
               </form>
@@ -511,10 +560,9 @@ export default function CattleMarket() {
               <button className="modal-close" onClick={() => setShowEnquiryModal(null)}>✕</button>
             </div>
             <div className="modal-body">
-              {/* Show animal image in enquiry modal too */}
               {showEnquiryModal.imageBase64 && (
                 <img
-                  src={`data:${showEnquiryModal.imageMimeType};base64,${showEnquiryModal.imageBase64}`}
+                  src={`data:${showEnquiryModal.imageMimeType || 'image/jpeg'};base64,${showEnquiryModal.imageBase64}`}
                   alt="animal"
                   style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px', marginBottom: '16px' }}
                 />
