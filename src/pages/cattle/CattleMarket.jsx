@@ -13,7 +13,6 @@ const defaultForm = {
 
 const defaultEnquiry = { buyerName: '', buyerPhone: '', offerPrice: '', message: '' };
 
-// ✅ Fixed compressImage using FileReader
 const compressImage = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -62,10 +61,18 @@ export default function CattleMarket() {
   const [filterSpecies, setFilterSpecies]       = useState('');
   const [saving, setSaving]                     = useState(false);
   const [activeTab, setActiveTab]               = useState('market');
+  const [myUserId, setMyUserId]                 = useState(null);
   const pollRef  = useRef(null);
   const imageRef = useRef();
 
-  // ===== LOAD =====
+  // ✅ Extract user ID reliably on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      const id = user._id || user.id;
+      setMyUserId(id?.toString());
+    }
+  }, [user]);
+
   const load = async () => {
     setLoading(true);
     try {
@@ -90,6 +97,15 @@ export default function CattleMarket() {
   }, []);
   useEffect(() => { if (activeTab === 'enquiries') loadEnquiries(); }, [activeTab]);
 
+  // ✅ Robust seller check — handles both string and object seller field
+  const isMyListing = (c) => {
+    if (!myUserId || !c.seller) return false;
+    const sellerId = typeof c.seller === 'object'
+      ? (c.seller._id || c.seller.id)?.toString()
+      : c.seller?.toString();
+    return sellerId === myUserId;
+  };
+
   // ===== IMAGE =====
   const handleImageChange = async (e) => {
     const file = e.target.files[0];
@@ -103,7 +119,6 @@ export default function CattleMarket() {
       setImagePreview(compressed);
       toast.success('Image ready ✅');
     } catch (err) {
-      console.error('Image error:', err);
       toast.error('Failed to process image');
     } finally { setCompressing(false); }
   };
@@ -114,7 +129,7 @@ export default function CattleMarket() {
     if (imageRef.current) imageRef.current.value = '';
   };
 
-  // ===== MODAL OPEN/CLOSE =====
+  // ===== MODALS =====
   const openAdd = () => {
     setEditListing(null);
     setForm(defaultForm);
@@ -132,7 +147,7 @@ export default function CattleMarket() {
       location: c.location || '', description: c.description || '',
       imageBase64: c.imageBase64 || null, imageMimeType: c.imageMimeType || null
     });
-    setImagePreview(c.imageBase64 ? `data:${c.imageMimeType};base64,${c.imageBase64}` : null);
+    setImagePreview(c.imageBase64 ? `data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}` : null);
     setShowModal(true);
   };
 
@@ -143,7 +158,7 @@ export default function CattleMarket() {
     setImagePreview(null);
   };
 
-  // ===== SUBMIT LISTING =====
+  // ===== ACTIONS =====
   const handleList = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -158,25 +173,19 @@ export default function CattleMarket() {
       closeModal();
       load();
     } catch (err) {
-      console.error('Submit error:', err.response?.data || err);
       toast.error(err.response?.data?.message || 'Failed to save listing');
     } finally { setSaving(false); }
   };
 
-  // ===== DELETE LISTING =====
   const handleDeleteListing = async (id) => {
     if (!window.confirm('Remove this listing from marketplace?')) return;
     try {
       await cattleAPI.delete(id);
       toast.success('Listing removed');
       load();
-    } catch (err) {
-      console.error('Delete error:', err.response?.data || err);
-      toast.error('Failed to remove listing');
-    }
+    } catch { toast.error('Failed to remove listing'); }
   };
 
-  // ===== ENQUIRY SUBMIT =====
   const handleEnquirySubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -196,7 +205,6 @@ export default function CattleMarket() {
     } finally { setSaving(false); }
   };
 
-  // ===== ENQUIRY STATUS =====
   const handleEnquiryStatus = async (id, status) => {
     try {
       await enquiryAPI.update(id, status);
@@ -205,7 +213,6 @@ export default function CattleMarket() {
     } catch { toast.error('Failed to update'); }
   };
 
-  // ===== DELETE ENQUIRY =====
   const handleDeleteEnquiry = async (id) => {
     if (!window.confirm('Delete this enquiry?')) return;
     try {
@@ -215,7 +222,6 @@ export default function CattleMarket() {
     } catch { toast.error('Failed to delete enquiry'); }
   };
 
-  const isMyListing      = (c) => c.seller?._id === user?._id || c.seller === user?._id;
   const statusMap        = { Pending: 'badge-orange', Accepted: 'badge-green', Rejected: 'badge-red' };
   const pendingEnquiries = enquiries.filter(e => e.status === 'Pending').length;
   const handleChange     = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -271,7 +277,7 @@ export default function CattleMarket() {
                 {cattle.map(c => (
                   <div key={c._id} className="card" style={{ overflow: 'hidden' }}>
 
-                    {/* ✅ Animal Image */}
+                    {/* Animal Image */}
                     {c.imageBase64 ? (
                       <img
                         src={`data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}`}
@@ -333,7 +339,7 @@ export default function CattleMarket() {
                           </div>
                         </div>
 
-                        {/* ✅ Edit/Delete for my listings, Enquire for others */}
+                        {/* ✅ Shows Edit/Remove for MY listings, Enquire for others */}
                         {isMyListing(c) ? (
                           <div style={{ display: 'flex', gap: '6px' }}>
                             <button className="btn btn-outline btn-sm" onClick={() => openEdit(c)}>✏️ Edit</button>
@@ -412,7 +418,6 @@ export default function CattleMarket() {
                         <td><span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                            {/* ✅ Accept / Reject for pending */}
                             {eq.status === 'Pending' && (
                               <>
                                 <button className="btn btn-sm"
@@ -427,9 +432,8 @@ export default function CattleMarket() {
                                 </button>
                               </>
                             )}
-                            {/* ✅ Delete always available */}
                             <button className="btn btn-sm"
-                              style={{ background: '#fde8ea', color: '#c62828', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                              style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
                               onClick={() => handleDeleteEnquiry(eq._id)}>
                               🗑 Delete
                             </button>
@@ -456,7 +460,6 @@ export default function CattleMarket() {
             <div className="modal-body">
               <form onSubmit={handleList}>
 
-                {/* ✅ Image Upload */}
                 <div className="form-group">
                   <label>📸 Animal Photo (optional)</label>
                   {!imagePreview ? (
