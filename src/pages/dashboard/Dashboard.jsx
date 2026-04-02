@@ -265,35 +265,6 @@ export default function Dashboard() {
             )}
           </div>
         </div>
-
-        {/* Quick Actions */}
-        <div className="card">
-          <div className="card-header"><h3>⚡ Quick Actions</h3></div>
-          <div className="card-body" style={{ padding: '16px' }}>
-            <div className="quick-actions-grid">
-              {[
-                { to: '/my-animals',           icon: '🐄', label: 'My Animals',    desc: 'Manage livestock' },
-                { to: '/cattle',               icon: '🏪', label: 'Cattle Market', desc: 'Buy & sell'       },
-                { to: '/breeding-records',     icon: '🧬', label: 'Breeding',      desc: 'Track pairs'      },
-                { to: '/feeding-records',      icon: '🌾', label: 'Feeding',       desc: 'Log feed'         },
-                { to: '/vaccination-records',  icon: '💉', label: 'Vaccinations',  desc: 'Medicines'        },
-                { to: '/animal-progress',      icon: '📈', label: 'Progress',      desc: 'Track growth'     },
-                { to: '/installments',         icon: '💳', label: 'Installments',  desc: 'Payments'         },
-                { to: '/vouchers',             icon: '🧾', label: 'Vouchers',      desc: 'Finance'          },
-                { to: '/profile',              icon: '👤', label: 'Profile',       desc: 'Account'          },
-              ].map(link => (
-                <Link key={link.to} to={link.to} style={{ textDecoration: 'none' }}>
-                  <div className="quick-action-card">
-                    <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>{link.icon}</div>
-                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{link.label}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{link.desc}</div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   );
