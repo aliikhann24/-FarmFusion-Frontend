@@ -477,43 +477,59 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 
 /* ===== AUTH PAGE WITH FARM BACKGROUND ===== */
 .auth-page {
-  min-height: 100vh; position: relative;
-  display: flex; align-items: center;
-  justify-content: center; padding: 20px;
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  /* ✅ Fallback solid color if image fails to load */
+  background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 50%, #40916c 100%);
 }
 
+/* ✅ The background image layer */
 .auth-bg {
-  position: fixed; inset: 0;
+  position: fixed;
+  inset: 0;
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
+  background-attachment: scroll; /* ✅ scroll works on ALL devices including iOS */
   z-index: 0;
 }
 
+/* ✅ Dark overlay — lighter so image shows through */
 .auth-bg::after {
-  content: ''; position: absolute; inset: 0;
+  content: '';
+  position: absolute;
+  inset: 0;
   background: linear-gradient(
     135deg,
-    rgba(27, 67, 50, 0.88) 0%,
-    rgba(45, 106, 79, 0.80) 50%,
-    rgba(27, 67, 50, 0.88) 100%
+    rgba(27, 67, 50, 0.72) 0%,
+    rgba(45, 106, 79, 0.62) 50%,
+    rgba(27, 67, 50, 0.72) 100%
   );
 }
 
-/* LOGIN — green farm fields */
+/* LOGIN background */
 .auth-bg-login {
   background-image: url('cows.jpg');
 }
 
-/* REGISTER — cattle grazing */
+/* REGISTER background */
 .auth-bg-register {
   background-image: url('sheep.jpg');
 }
 
 .auth-container {
-  position: relative; z-index: 1;
-  display: flex; align-items: center; gap: 60px;
-  width: 100%; max-width: 1000px; margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .auth-brand { flex: 1; color: white; }
@@ -561,6 +577,7 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 .auth-card-footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
 .auth-card-footer a:hover { text-decoration: underline; }
 
+/* ===== AUTH RESPONSIVE ===== */
 @media (max-width: 768px) {
   .auth-container {
     flex-direction: column; gap: 24px;
@@ -572,6 +589,30 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .auth-brand-tagline { font-size: 0.95rem; margin-bottom: 16px; }
   .auth-brand-features { display: none; }
   .auth-card { padding: 28px 20px; border-radius: 20px; max-width: 100%; width: 100%; }
+
+  /* ✅ KEY FIX — make background image visible on mobile */
+  .auth-bg {
+    position: fixed;
+    background-attachment: scroll;
+    background-size: cover;
+    background-position: center center;
+  }
+
+  /* ✅ Lighter overlay so image actually shows on mobile */
+  .auth-bg::after {
+    background: linear-gradient(
+      160deg,
+      rgba(27, 67, 50, 0.55) 0%,
+      rgba(45, 106, 79, 0.45) 50%,
+      rgba(27, 67, 50, 0.55) 100%
+    );
+  }
+
+  .auth-page {
+    padding: 20px 16px;
+    min-height: 100vh;
+    align-items: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -579,6 +620,16 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .auth-brand-logo { font-size: 1.8rem; }
   .auth-card { padding: 24px 16px; }
   .auth-card-header h2 { font-size: 1.4rem; }
+
+  /* ✅ Even lighter overlay on small phones */
+  .auth-bg::after {
+    background: linear-gradient(
+      160deg,
+      rgba(27, 67, 50, 0.50) 0%,
+      rgba(45, 106, 79, 0.40) 50%,
+      rgba(27, 67, 50, 0.50) 100%
+    );
+  }
 }
 
 /* ===== PASSWORD INPUT WITH TOGGLE ===== */
@@ -676,8 +727,10 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .page-vouchers::before,
   .page-profile::before {
     background-attachment: scroll;
+    opacity: 0.10;
   }
 }
+
 /* Vaccination page background */
 .page-vaccination::before {
   content: '';
@@ -692,5 +745,8 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 }
 
 @media (max-width: 768px) {
-  .page-vaccination::before { background-attachment: scroll; }
+  .page-vaccination::before {
+    background-attachment: scroll;
+    opacity: 0.10;
+  }
 }
