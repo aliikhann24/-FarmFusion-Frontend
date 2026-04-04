@@ -474,8 +474,6 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   .auth-left .tagline { font-size: 0.9rem; }
   .auth-right { padding: 16px; }
 }
-
-/* ===== AUTH PAGE WITH FARM BACKGROUND ===== */
 /* ===== AUTH PAGE WITH FARM BACKGROUND ===== */
 .auth-page {
   min-height: 100vh;
@@ -553,8 +551,8 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   background: white;
   border-radius: 20px;
   padding: 28px 32px;        /* ✅ reduced from 40px */
-  width: 100%;
-  max-width: 380px;          /* ✅ reduced from 420px */
+  max-width: 340px;
+  width: 90%;      /* ✅ reduced from 420px */
   box-shadow: 0 20px 60px rgba(0,0,0,0.35);
   flex-shrink: 0;
 }
@@ -631,7 +629,7 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
 @media (max-width: 480px) {
   .auth-page { padding: 12px; }
   .auth-brand-logo { font-size: 1.5rem; }
-  .auth-card { padding: 18px 16px; }
+  .auth-card { padding: 18px 16px; max-width: 300px; width: 88%; }
   .auth-card-header h2 { font-size: 1.15rem; }
   .auth-bg::after {
     background: linear-gradient(

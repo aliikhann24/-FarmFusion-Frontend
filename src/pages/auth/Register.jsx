@@ -61,7 +61,7 @@ export default function Register() {
               </div>
               <div className="form-group">
                 <label>Farm Name</label>
-                <input type="text" name="farmName" placeholder="Green Valley Farm"
+                <input type="text" name="farmName" placeholder="Valley Farm"
                   value={form.farmName} onChange={handleChange} />
               </div>
             </div>
