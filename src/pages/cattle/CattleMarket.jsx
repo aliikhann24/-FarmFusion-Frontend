@@ -96,26 +96,41 @@ export default function CattleMarket() {
     } catch {}
   };
 
+  // FIXED: buyer gets toast notification when seller accepts or rejects
   const loadSentEnquiries = async (notify = false) => {
     try {
       const { data } = await enquiryAPI.sent();
       const fresh = data.enquiries || [];
+
       if (notify && prevSentRef.current.length > 0) {
         fresh.forEach(eq => {
           const prev = prevSentRef.current.find(p => p._id === eq._id);
+          // Only fire when status actually changed from Pending
           if (prev && prev.status === 'Pending' && eq.status !== 'Pending') {
-            const animalName = eq.cattle?.name || eq.cattle?.tagId || 'Animal';
+            const animalName =
+              eq.cattle?.name ||
+              (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'Animal');
+
             if (eq.status === 'Accepted') {
-              toast.success(`🎉 Your enquiry for ${animalName} was ACCEPTED! Contact the seller.`, { autoClose: 8000 });
+              toast.success(
+                `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
+                { autoClose: 10000 }
+              );
             } else if (eq.status === 'Rejected') {
-              toast.error(`❌ Your enquiry for ${animalName} was declined.`, { autoClose: 6000 });
+              toast.error(
+                `❌ Your offer for ${animalName} was declined. Try another listing!`,
+                { autoClose: 7000 }
+              );
             }
           }
         });
       }
+
       prevSentRef.current = fresh;
       setSentEnquiries(fresh);
-    } catch {}
+    } catch (e) {
+      console.error('Failed to load sent enquiries:', e);
+    }
   };
 
   useEffect(() => { load(); }, [search, filterSpecies]);
@@ -123,9 +138,10 @@ export default function CattleMarket() {
   useEffect(() => {
     loadEnquiries();
     loadSentEnquiries(false);
+    // Poll every 30 seconds to check for status updates
     pollRef.current = setInterval(() => {
       loadEnquiries();
-      loadSentEnquiries(true);
+      loadSentEnquiries(true); // true = show toast if status changed
     }, 30000);
     return () => clearInterval(pollRef.current);
   }, []);
@@ -407,7 +423,6 @@ export default function CattleMarket() {
         {/* ===== MARKETPLACE TAB ===== */}
         {activeTab === 'market' && (
           <>
-            {/* ===== FILTER BAR — animate from left ===== */}
             <Animate direction="left">
               <div className="filter-bar">
                 <input className="search-input" placeholder="🔍 Search by name, breed or location..."
@@ -430,7 +445,6 @@ export default function CattleMarket() {
                 <button className="btn btn-primary" onClick={openAdd}>+ List Animal</button>
               </div>
             ) : (
-              /* ===== CATTLE CARDS — staggered animate up ===== */
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
                 {cattle.map((c, i) => (
                   <Animate key={c._id} direction="up" delay={i * 60}>
