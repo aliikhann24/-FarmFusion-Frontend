@@ -14,10 +14,15 @@ API.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('farmfusion_token');
-      localStorage.removeItem('farmfusion_user');
-      window.location.href = '/login';
-    }
+  const token = localStorage.getItem('farmfusion_token');
+  const isAuthRoute = error.config.url.includes('/auth/login') || 
+                      error.config.url.includes('/auth/register');
+  if (token && !isAuthRoute) {
+    localStorage.removeItem('farmfusion_token');
+    localStorage.removeItem('farmfusion_user');
+    window.location.href = '/login';
+  }
+}
     return Promise.reject(error);
   }
 );

@@ -505,7 +505,7 @@ export default function AnimalProgress() {
 
                 {/* ===== VIDEO UPLOAD ===== */}
                 <div className="form-group">
-                  <label>🎥 Animal Video</label>
+                  <label>🎥 Animal Video <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 400 }}>(Please upload videos under 10MB)</span></label>
                   {!videoPreview && !form.videoBase64 ? (
                     <div className="upload-box"
                       onClick={() => !uploadingVideo && videoRef.current.click()}
