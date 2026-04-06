@@ -96,7 +96,6 @@ export default function CattleMarket() {
     } catch {}
   };
 
-  // FIXED: buyer gets toast notification when seller accepts or rejects
   const loadSentEnquiries = async (notify = false) => {
     try {
       const { data } = await enquiryAPI.sent();
@@ -105,7 +104,6 @@ export default function CattleMarket() {
       if (notify && prevSentRef.current.length > 0) {
         fresh.forEach(eq => {
           const prev = prevSentRef.current.find(p => p._id === eq._id);
-          // Only fire when status actually changed from Pending
           if (prev && prev.status === 'Pending' && eq.status !== 'Pending') {
             const animalName =
               eq.cattle?.name ||
@@ -138,10 +136,9 @@ export default function CattleMarket() {
   useEffect(() => {
     loadEnquiries();
     loadSentEnquiries(false);
-    // Poll every 30 seconds to check for status updates
     pollRef.current = setInterval(() => {
       loadEnquiries();
-      loadSentEnquiries(true); // true = show toast if status changed
+      loadSentEnquiries(true);
     }, 30000);
     return () => clearInterval(pollRef.current);
   }, []);
@@ -261,12 +258,32 @@ export default function CattleMarket() {
   };
 
   const handleDeleteEnquiry = async (id) => {
-    if (!window.confirm('Delete this enquiry?')) return;
+    const ok = await confirm({
+      title: 'Delete Enquiry?',
+      message: 'This enquiry will be permanently deleted.',
+      confirmText: 'Yes, Delete', type: 'warning'
+    });
+    if (!ok) return;
     try {
       await enquiryAPI.delete(id);
       toast.success('Enquiry deleted');
       loadEnquiries();
     } catch { toast.error('Failed to delete enquiry'); }
+  };
+
+  // NEW: buyer deletes their own sent enquiry
+  const handleDeleteSentEnquiry = async (id) => {
+    const ok = await confirm({
+      title: 'Remove Enquiry?',
+      message: 'This enquiry will be removed from your list.',
+      confirmText: 'Yes, Remove', type: 'warning'
+    });
+    if (!ok) return;
+    try {
+      await enquiryAPI.deleteSent(id);
+      toast.success('Enquiry removed');
+      loadSentEnquiries(false);
+    } catch { toast.error('Failed to remove enquiry'); }
   };
 
   const handleChange     = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -612,7 +629,13 @@ export default function CattleMarket() {
           <Animate direction="up" delay={0}>
             <div className="card">
               <div className="card-header">
-                <h3>📋 My Sent Enquiries</h3>
+                <h3>📋 My Sent Enquiries
+                  {pendingSent > 0 && (
+                    <span style={{ marginLeft: '8px', background: 'var(--warning)', color: 'white', borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem' }}>
+                      {pendingSent} pending
+                    </span>
+                  )}
+                </h3>
                 <button className="btn btn-outline btn-sm" onClick={() => loadSentEnquiries(false)}>🔄 Refresh</button>
               </div>
               {sentEnquiries.length === 0 ? (
@@ -627,7 +650,7 @@ export default function CattleMarket() {
                   <table>
                     <thead>
                       <tr>
-                        <th>Animal</th><th>My Offer</th><th>My Message</th><th>Seller</th><th>Status</th>
+                        <th>Animal</th><th>My Offer</th><th>My Message</th><th>Seller</th><th>Status</th><th>Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -662,6 +685,15 @@ export default function CattleMarket() {
                                 </div>
                               )}
                             </div>
+                          </td>
+                          <td>
+                            {eq.status !== 'Pending' && (
+                              <button
+                                className="btn btn-sm"
+                                style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                                onClick={() => handleDeleteSentEnquiry(eq._id)}
+                              >🗑 Delete</button>
+                            )}
                           </td>
                         </tr>
                       ))}

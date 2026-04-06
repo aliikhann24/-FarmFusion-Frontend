@@ -14,15 +14,15 @@ API.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-  const token = localStorage.getItem('farmfusion_token');
-  const isAuthRoute = error.config.url.includes('/auth/login') || 
-                      error.config.url.includes('/auth/register');
-  if (token && !isAuthRoute) {
-    localStorage.removeItem('farmfusion_token');
-    localStorage.removeItem('farmfusion_user');
-    window.location.href = '/login';
-  }
-}
+      const token = localStorage.getItem('farmfusion_token');
+      const isAuthRoute = error.config.url.includes('/auth/login') || 
+                          error.config.url.includes('/auth/register');
+      if (token && !isAuthRoute) {
+        localStorage.removeItem('farmfusion_token');
+        localStorage.removeItem('farmfusion_user');
+        window.location.href = '/login';
+      }
+    }
     return Promise.reject(error);
   }
 );
@@ -53,7 +53,7 @@ export const breedingAPI = {
 export const feedingAPI = {
   getAll:  (params)   => API.get('/feeding', { params }),
   create:  (data)     => API.post('/feeding', data),
-  update:  (id, data) => API.put(`/feeding/${id}`, data),  // ✅ add this if missing
+  update:  (id, data) => API.put(`/feeding/${id}`, data),
   delete:  (id)       => API.delete(`/feeding/${id}`),
 };
 
@@ -86,17 +86,21 @@ export const progressAPI = {
   update:  (id, data) => API.put(`/progress/${id}`, data),
   delete:  (id)       => API.delete(`/progress/${id}`),
 };
+
 export const enquiryAPI = {
-  submit:   (data)       => API.post('/enquiries', data),
-  received: ()           => API.get('/enquiries/received'),
-  sent:     ()           => API.get('/enquiries/sent'),
-  update:   (id, status) => API.patch(`/enquiries/${id}/status`, { status }),
-  delete:   (id)         => API.delete(`/enquiries/${id}`),  // ✅ ADD THIS
+  submit:     (data)       => API.post('/enquiries', data),
+  received:   ()           => API.get('/enquiries/received'),
+  sent:       ()           => API.get('/enquiries/sent'),
+  update:     (id, status) => API.patch(`/enquiries/${id}/status`, { status }),
+  delete:     (id)         => API.delete(`/enquiries/${id}`),
+  deleteSent: (id)         => API.delete(`/enquiries/sent/${id}`),
 };
+
 export const vaccinationAPI = {
   getAll:  (params)   => API.get('/vaccinations', { params }),
   create:  (data)     => API.post('/vaccinations', data),
   update:  (id, data) => API.put(`/vaccinations/${id}`, data),
   delete:  (id)       => API.delete(`/vaccinations/${id}`),
 };
+
 export default API;
