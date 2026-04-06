@@ -16,6 +16,7 @@ export default function Installments() {
   const [loading, setLoading]           = useState(true);
   const [showModal, setShowModal]       = useState(false);
   const [showPayModal, setShowPayModal] = useState(null);
+  const [showHistory, setShowHistory]   = useState(null);
   const [editRecord, setEditRecord]     = useState(null);
   const [form, setForm]                 = useState(defaultForm);
   const [payAmount, setPayAmount]       = useState('');
@@ -44,21 +45,19 @@ export default function Installments() {
     return matchSearch && matchStatus && matchFreq;
   });
 
-  const openAdd = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
-
+  const openAdd  = () => { setEditRecord(null); setForm(defaultForm); setShowModal(true); };
   const openEdit = (i) => {
     setEditRecord(i);
     setForm({
-      title:             i.title || '',
-      totalAmount:       i.totalAmount || '',
+      title:             i.title             || '',
+      totalAmount:       i.totalAmount       || '',
       installmentAmount: i.installmentAmount || '',
-      frequency:         i.frequency || 'Monthly',
+      frequency:         i.frequency         || 'Monthly',
       startDate:         i.startDate ? i.startDate.split('T')[0] : '',
       dueDate:           i.dueDate   ? i.dueDate.split('T')[0]   : '',
     });
     setShowModal(true);
   };
-
   const closeModal = () => { setShowModal(false); setEditRecord(null); setForm(defaultForm); };
 
   const handleSubmit = async (e) => {
@@ -117,6 +116,7 @@ export default function Installments() {
   const activePlans    = installments.filter(i => i.status === 'Active').length;
   const completedPlans = installments.filter(i => i.status === 'Completed').length;
   const totalRemaining = installments.reduce((s, i) => s + Math.max(0, i.totalAmount - i.paidAmount), 0);
+  const overdueCount   = installments.filter(i => i.status === 'Overdue').length;
 
   return (
     <div className="page-installments">
@@ -128,7 +128,7 @@ export default function Installments() {
       <div className="page-content">
         <QuickNav />
 
-        {/* ===== STATS — animate up with stagger ===== */}
+        {/* ===== STATS ===== */}
         <div className="stats-grid" style={{ marginBottom: '24px' }}>
           {[
             { label: 'Total Plans',     value: totalPlans,                               icon: '💳', cls: 'blue',   big: false },
@@ -140,9 +140,7 @@ export default function Installments() {
               <div className="stat-card">
                 <div className={`stat-icon ${s.cls}`}>{s.icon}</div>
                 <div className="stat-info">
-                  <div className="value" style={{ fontSize: s.big ? '1.1rem' : '1.8rem' }}>
-                    {s.value}
-                  </div>
+                  <div className="value" style={{ fontSize: s.big ? '1.1rem' : '1.8rem' }}>{s.value}</div>
                   <div className="label">{s.label}</div>
                 </div>
               </div>
@@ -150,7 +148,28 @@ export default function Installments() {
           ))}
         </div>
 
-        {/* ===== FILTER BAR — animate from left ===== */}
+        {/* ===== OVERDUE ALERT ===== */}
+        {overdueCount > 0 && (
+          <Animate direction="right">
+            <div style={{
+              background: '#fde8ea', border: '1px solid #f5c6cb',
+              borderRadius: '10px', padding: '14px 20px',
+              marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px'
+            }}>
+              <span style={{ fontSize: '1.4rem' }}>⚠️</span>
+              <div>
+                <strong style={{ color: '#c62828' }}>
+                  {overdueCount} overdue payment plan{overdueCount > 1 ? 's' : ''}!
+                </strong>
+                <p style={{ fontSize: '0.85rem', color: '#c62828', margin: 0 }}>
+                  Please review and make payments as soon as possible.
+                </p>
+              </div>
+            </div>
+          </Animate>
+        )}
+
+        {/* ===== FILTER BAR ===== */}
         <Animate direction="left">
           <div className="filter-bar">
             <input
@@ -192,16 +211,13 @@ export default function Installments() {
           </div>
         </Animate>
 
-        {/* Results count */}
         {(search || filterStatus || filterFreq) && (
-          <Animate direction="right">
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
-              Showing {filtered.length} of {installments.length} plans
-            </p>
-          </Animate>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px' }}>
+            Showing {filtered.length} of {installments.length} plans
+          </p>
         )}
 
-        {/* ===== MAIN TABLE CARD — animate from bottom ===== */}
+        {/* ===== MAIN TABLE ===== */}
         <Animate direction="up" delay={120}>
           <div className="card">
             {loading ? (
@@ -222,7 +238,7 @@ export default function Installments() {
                     <tr>
                       <th>Title</th><th>Total</th><th>Paid</th>
                       <th>Remaining</th><th>Per Install.</th>
-                      <th>Frequency</th><th>Status</th><th>Actions</th>
+                      <th>Frequency</th><th>Due Date</th><th>Status</th><th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -233,8 +249,8 @@ export default function Installments() {
                         <tr key={i._id}>
                           <td>
                             <strong>{i.title}</strong>
-                            <div style={{ marginTop: '6px', background: '#e8f5e9', borderRadius: '4px', height: '4px', width: '100px' }}>
-                              <div style={{ background: 'var(--primary)', borderRadius: '4px', height: '4px', width: `${progress}%` }} />
+                            <div style={{ marginTop: '6px', background: '#e8f5e9', borderRadius: '4px', height: '5px', width: '120px' }}>
+                              <div style={{ background: progress === 100 ? 'var(--success)' : 'var(--primary)', borderRadius: '4px', height: '5px', width: `${progress}%`, transition: 'width 0.5s ease' }} />
                             </div>
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '2px' }}>{progress}% paid</div>
                           </td>
@@ -247,12 +263,28 @@ export default function Installments() {
                           </td>
                           <td>PKR {Number(i.installmentAmount).toLocaleString()}</td>
                           <td>{i.frequency}</td>
+                          <td>
+                            {i.dueDate ? (
+                              <span style={{ color: i.status === 'Overdue' ? 'var(--danger)' : 'var(--text)', fontWeight: i.status === 'Overdue' ? 700 : 400 }}>
+                                {new Date(i.dueDate).toLocaleDateString()}
+                              </span>
+                            ) : '—'}
+                          </td>
                           <td><span className={`badge ${statusMap[i.status]}`}>{i.status}</span></td>
                           <td>
                             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                               {i.status === 'Active' && (
-                                <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>Pay</button>
+                                <button className="btn btn-secondary btn-sm" onClick={() => setShowPayModal(i)}>
+                                  💰 Pay
+                                </button>
                               )}
+                              <button
+                                className="btn btn-outline btn-sm"
+                                onClick={() => setShowHistory(i)}
+                                title="Payment History"
+                              >
+                                📋
+                              </button>
                               <button className="btn btn-outline btn-sm" onClick={() => openEdit(i)}>Edit</button>
                               <button className="btn btn-danger btn-sm" onClick={() => handleDelete(i._id)}>Delete</button>
                             </div>
@@ -268,7 +300,7 @@ export default function Installments() {
         </Animate>
       </div>
 
-      {/* Add / Edit Modal */}
+      {/* ===== ADD / EDIT MODAL ===== */}
       {showModal && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={e => e.stopPropagation()}>
@@ -331,17 +363,17 @@ export default function Installments() {
         </div>
       )}
 
-      {/* Pay Modal */}
+      {/* ===== PAY MODAL ===== */}
       {showPayModal && (
         <div className="modal-overlay" onClick={() => setShowPayModal(null)}>
           <div className="modal" style={{ maxWidth: '400px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>Record Payment</h3>
+              <h3>💰 Record Payment</h3>
               <button className="modal-close" onClick={() => setShowPayModal(null)}>✕</button>
             </div>
             <div className="modal-body">
               <div style={{ background: '#f4faf5', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
-                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{showPayModal.title}</div>
+                <div style={{ fontSize: '0.88rem', fontWeight: 600, marginBottom: '10px' }}>{showPayModal.title}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Paid so far</div>
@@ -356,6 +388,16 @@ export default function Installments() {
                     <div style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(showPayModal.installmentAmount).toLocaleString()}</div>
                   </div>
                 </div>
+                {/* Progress bar */}
+                <div style={{ marginTop: '12px', background: '#e8f5e9', borderRadius: '4px', height: '6px' }}>
+                  <div style={{
+                    background: 'var(--primary)', borderRadius: '4px', height: '6px',
+                    width: `${Math.min(100, Math.round((showPayModal.paidAmount / showPayModal.totalAmount) * 100))}%`
+                  }} />
+                </div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  {Math.min(100, Math.round((showPayModal.paidAmount / showPayModal.totalAmount) * 100))}% complete
+                </div>
               </div>
               <form onSubmit={handlePay}>
                 <div className="form-group">
@@ -365,16 +407,103 @@ export default function Installments() {
                     required min="1" placeholder={showPayModal.installmentAmount} />
                 </div>
                 <div className="form-group">
-                  <label>Note</label>
-                  <input value={payNote} onChange={e => setPayNote(e.target.value)} placeholder="e.g. March payment" />
+                  <label>Note (optional)</label>
+                  <input value={payNote} onChange={e => setPayNote(e.target.value)}
+                    placeholder="e.g. March payment" />
                 </div>
                 <div className="form-actions">
                   <button type="button" className="btn btn-outline" onClick={() => setShowPayModal(null)}>Cancel</button>
                   <button type="submit" className="btn btn-primary" disabled={saving}>
-                    {saving ? 'Recording...' : 'Record Payment'}
+                    {saving ? 'Recording...' : '💰 Record Payment'}
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== PAYMENT HISTORY MODAL ===== */}
+      {showHistory && (
+        <div className="modal-overlay" onClick={() => setShowHistory(null)}>
+          <div className="modal" style={{ maxWidth: '500px' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>📋 Payment History</h3>
+              <button className="modal-close" onClick={() => setShowHistory(null)}>✕</button>
+            </div>
+            <div className="modal-body">
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--primary-dark)' }}>{showHistory.title}</div>
+                <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  {showHistory.frequency} • {showHistory.status}
+                </div>
+              </div>
+
+              {/* Summary bar */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: '1fr 1fr 1fr',
+                gap: '10px', marginBottom: '20px'
+              }}>
+                {[
+                  { label: 'Total',     value: `PKR ${Number(showHistory.totalAmount).toLocaleString()}`,                                           color: 'var(--text)'    },
+                  { label: 'Paid',      value: `PKR ${Number(showHistory.paidAmount).toLocaleString()}`,                                            color: 'var(--success)' },
+                  { label: 'Remaining', value: `PKR ${Math.max(0, showHistory.totalAmount - showHistory.paidAmount).toLocaleString()}`,              color: 'var(--danger)'  },
+                ].map(item => (
+                  <div key={item.label} style={{ background: '#f8faf8', borderRadius: '10px', padding: '10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '4px' }}>{item.label}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: item.color }}>{item.value}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Progress */}
+              <div style={{ marginBottom: '20px' }}>
+                <div style={{ background: '#e8f5e9', borderRadius: '6px', height: '8px' }}>
+                  <div style={{
+                    background: 'var(--primary)', borderRadius: '6px', height: '8px',
+                    width: `${Math.min(100, Math.round((showHistory.paidAmount / showHistory.totalAmount) * 100))}%`,
+                    transition: 'width 0.5s ease'
+                  }} />
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '4px', textAlign: 'right' }}>
+                  {Math.min(100, Math.round((showHistory.paidAmount / showHistory.totalAmount) * 100))}% complete
+                </div>
+              </div>
+
+              {/* Payments list */}
+              <h4 style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Payment Entries ({showHistory.payments?.length || 0})
+              </h4>
+
+              {!showHistory.payments?.length ? (
+                <div className="empty-state" style={{ padding: '30px' }}>
+                  <div className="icon">💳</div>
+                  <p>No payments recorded yet</p>
+                  <button className="btn btn-primary btn-sm" onClick={() => { setShowHistory(null); setShowPayModal(showHistory); }}>
+                    Record First Payment
+                  </button>
+                </div>
+              ) : (
+                <div className="table-container">
+                  <table>
+                    <thead>
+                      <tr><th>#</th><th>Date</th><th>Amount</th><th>Note</th></tr>
+                    </thead>
+                    <tbody>
+                      {showHistory.payments.map((p, idx) => (
+                        <tr key={idx}>
+                          <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>#{idx + 1}</td>
+                          <td>{new Date(p.paidOn).toLocaleDateString()}</td>
+                          <td style={{ color: 'var(--success)', fontWeight: 700 }}>
+                            PKR {Number(p.amount).toLocaleString()}
+                          </td>
+                          <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{p.note || '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
         </div>
