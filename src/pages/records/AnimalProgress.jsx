@@ -472,7 +472,7 @@ export default function AnimalProgress() {
 
                 {/* ===== IMAGE UPLOAD ===== */}
                 <div className="form-group">
-                  <label>📸 Animal Photo (optional — max 5MB)</label>
+                  <label>📸 Animal Photo</label>
                   {!imagePreview ? (
                     <div className="upload-box"
                       onClick={() => !compressing && imageRef.current.click()}
@@ -505,7 +505,7 @@ export default function AnimalProgress() {
 
                 {/* ===== VIDEO UPLOAD ===== */}
                 <div className="form-group">
-                  <label>🎥 Animal Video (optional — max 20MB)</label>
+                  <label>🎥 Animal Video</label>
                   {!videoPreview && !form.videoBase64 ? (
                     <div className="upload-box"
                       onClick={() => !uploadingVideo && videoRef.current.click()}
