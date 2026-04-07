@@ -32,12 +32,17 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
- const logout = () => {
-  localStorage.removeItem('farmfusion_token');
-  localStorage.removeItem('farmfusion_user');
-  localStorage.removeItem('farmfusion_enquiry_statuses'); // ✅ clear on logout
-  setUser(null);
-};
+  const logout = () => {
+    // ✅ Remove this specific user's notification data on logout
+    if (user) {
+      const uid = user.id || user._id;
+      localStorage.removeItem(`farmfusion_enquiry_statuses_${uid}`);
+      localStorage.removeItem(`farmfusion_unseen_${uid}`);
+    }
+    localStorage.removeItem('farmfusion_token');
+    localStorage.removeItem('farmfusion_user');
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>

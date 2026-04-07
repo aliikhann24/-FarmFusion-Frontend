@@ -68,19 +68,28 @@ export default function CattleMarket() {
   const [saving, setSaving]                     = useState(false);
   const [activeTab, setActiveTab]               = useState('market');
   const [myUserId, setMyUserId]                 = useState(null);
+
+  // ✅ unseenChanges persists in localStorage per user
   const [unseenChanges, setUnseenChanges]       = useState(0);
 
-  const prevSentRef = useRef([]);
-  const pollRef     = useRef(null);
-  const imageRef    = useRef();
+  const pollRef  = useRef(null);
+  const imageRef = useRef();
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
+
+  // ✅ Helper: get this user's localStorage key
+  const getUid = () => user?.id || user?._id || 'guest';
+  const statusKey  = () => `farmfusion_enquiry_statuses_${getUid()}`;
+  const unseenKey  = () => `farmfusion_unseen_${getUid()}`;
 
   useEffect(() => {
     if (user) {
       const id = user._id || user.id;
       setMyUserId(id?.toString());
+      // ✅ Restore unseen count from localStorage on login/refresh
+      const saved = parseInt(localStorage.getItem(unseenKey()) || '0', 10);
+      setUnseenChanges(saved);
     }
-  }, [user]);
+  }, [user]); // eslint-disable-line
 
   const load = async () => {
     setLoading(true);
@@ -98,24 +107,21 @@ export default function CattleMarket() {
     } catch {}
   };
 
-  // ✅ localStorage-based notification — survives page refresh
+  // ✅ Full localStorage-based notification system — survives refresh & logout
   const loadSentEnquiries = async (notify = false) => {
     try {
       const { data } = await enquiryAPI.sent();
       const fresh = data.enquiries || [];
 
       if (notify) {
-        // Load last known statuses from localStorage
-        const savedStatuses = JSON.parse(
-          localStorage.getItem('farmfusion_enquiry_statuses') || '{}'
-        );
-
+        const savedStatuses = JSON.parse(localStorage.getItem(statusKey()) || '{}');
         let newChanges = 0;
+
         fresh.forEach(eq => {
           const prevStatus    = savedStatuses[eq._id];
           const currentStatus = eq.status;
 
-          // If we've seen this enquiry before AND status changed
+          // ✅ Status changed since we last checked
           if (prevStatus && prevStatus !== currentStatus) {
             newChanges++;
             const animalName = eq.cattle?.name ||
@@ -124,41 +130,43 @@ export default function CattleMarket() {
             if (currentStatus === 'Accepted') {
               toast.success(
                 `🎉 Your offer for "${animalName}" was ACCEPTED! Contact the seller to finalize.`,
-                { autoClose: 10000, toastId: `accepted-${eq._id}` }
+                { autoClose: false, toastId: `accepted-${eq._id}` }
               );
             } else if (currentStatus === 'Rejected') {
               toast.error(
                 `❌ Your offer for "${animalName}" was declined. Try another listing!`,
-                { autoClose: 7000, toastId: `rejected-${eq._id}` }
+                { autoClose: false, toastId: `rejected-${eq._id}` }
               );
             }
           }
         });
 
-        // Save current statuses to localStorage for next comparison
+        // ✅ Save latest statuses
         const newStatuses = {};
         fresh.forEach(eq => { newStatuses[eq._id] = eq.status; });
-        localStorage.setItem('farmfusion_enquiry_statuses', JSON.stringify(newStatuses));
+        localStorage.setItem(statusKey(), JSON.stringify(newStatuses));
 
-        if (newChanges > 0) setUnseenChanges(prev => prev + newChanges);
+        // ✅ Persist unseen count in localStorage so badge survives refresh
+        if (newChanges > 0) {
+          setUnseenChanges(prev => {
+            const updated = prev + newChanges;
+            localStorage.setItem(unseenKey(), String(updated));
+            return updated;
+          });
+        }
 
       } else {
-        // On first load (notify=false) — seed localStorage without showing toasts
-        const existingSaved = JSON.parse(
-          localStorage.getItem('farmfusion_enquiry_statuses') || '{}'
-        );
-        // Only add NEW enquiries, don't overwrite existing ones
-        // This lets us detect changes that happened while user was logged out
+        // notify=false: seed localStorage — only add NEW enquiries, never overwrite existing
+        const existingSaved = JSON.parse(localStorage.getItem(statusKey()) || '{}');
         const merged = { ...existingSaved };
         fresh.forEach(eq => {
           if (!merged[eq._id]) {
             merged[eq._id] = eq.status;
           }
         });
-        localStorage.setItem('farmfusion_enquiry_statuses', JSON.stringify(merged));
+        localStorage.setItem(statusKey(), JSON.stringify(merged));
       }
 
-      prevSentRef.current = fresh;
       setSentEnquiries(fresh);
     } catch (e) {
       console.error('Failed to load sent enquiries:', e);
@@ -169,21 +177,14 @@ export default function CattleMarket() {
 
   useEffect(() => {
     loadEnquiries();
-
-    // Seed localStorage first, then immediately check for changes
+    // ✅ Seed first, then check for changes immediately, then poll
     loadSentEnquiries(false).then(() => {
-      // ✅ Check immediately if any status changed since last visit
-      setTimeout(() => {
-        loadSentEnquiries(true);
-      }, 500);
-
-      // Then poll every 15 seconds
+      setTimeout(() => loadSentEnquiries(true), 500);
       pollRef.current = setInterval(() => {
         loadEnquiries();
         loadSentEnquiries(true);
       }, 15000);
     });
-
     return () => clearInterval(pollRef.current);
   }, []); // eslint-disable-line
 
@@ -191,7 +192,9 @@ export default function CattleMarket() {
     if (activeTab === 'enquiries') loadEnquiries();
     if (activeTab === 'my-enquiries') {
       loadSentEnquiries(true);
-      setUnseenChanges(0); // clear badge when user views the tab
+      // ✅ Clear badge from state AND localStorage when user opens My Offers
+      setUnseenChanges(0);
+      localStorage.setItem(unseenKey(), '0');
     }
   }, [activeTab]); // eslint-disable-line
 
@@ -296,7 +299,6 @@ export default function CattleMarket() {
       toast.success('Enquiry sent! The seller will be notified. ✅');
       setShowEnquiryModal(null);
       setEnquiryForm(defaultEnquiry);
-      // ✅ After sending, seed the new enquiry status in localStorage
       loadSentEnquiries(false);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send enquiry');
@@ -334,10 +336,10 @@ export default function CattleMarket() {
     if (!ok) return;
     try {
       await enquiryAPI.deleteSent(id);
-      // ✅ Also remove from localStorage so no ghost notifications
-      const saved = JSON.parse(localStorage.getItem('farmfusion_enquiry_statuses') || '{}');
+      // ✅ Remove from localStorage so no ghost notifications
+      const saved = JSON.parse(localStorage.getItem(statusKey()) || '{}');
       delete saved[id];
-      localStorage.setItem('farmfusion_enquiry_statuses', JSON.stringify(saved));
+      localStorage.setItem(statusKey(), JSON.stringify(saved));
       toast.success('Enquiry removed');
       loadSentEnquiries(false);
     } catch { toast.error('Failed to remove enquiry'); }
@@ -462,10 +464,11 @@ export default function CattleMarket() {
         <div><h2>🏪 Cattle Marketplace</h2><p>Buy & sell livestock</p></div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
 
-          {/* MY OFFERS button — red badge for new changes, yellow for pending */}
+          {/* MY OFFERS button */}
           <button className="btn btn-outline btn-sm" style={{ position: 'relative' }}
             onClick={() => setActiveTab(activeTab === 'my-enquiries' ? 'market' : 'my-enquiries')}>
             {activeTab === 'my-enquiries' ? '🏪 Market' : '📋 My Offers'}
+            {/* ✅ Red badge for new accepted/rejected — persists until user opens My Offers */}
             {unseenChanges > 0 && activeTab !== 'my-enquiries' && (
               <span style={{
                 position: 'absolute', top: '-8px', right: '-8px',
@@ -475,6 +478,7 @@ export default function CattleMarket() {
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>{unseenChanges}</span>
             )}
+            {/* Yellow badge for pending only when no unseen changes */}
             {pendingSent > 0 && unseenChanges === 0 && activeTab !== 'my-enquiries' && (
               <span style={{
                 position: 'absolute', top: '-8px', right: '-8px',
@@ -486,7 +490,7 @@ export default function CattleMarket() {
             )}
           </button>
 
-          {/* ENQUIRIES button — for sellers */}
+          {/* ENQUIRIES button for sellers */}
           <button className="btn btn-outline btn-sm" style={{ position: 'relative' }}
             onClick={() => setActiveTab(activeTab === 'enquiries' ? 'market' : 'enquiries')}>
             {activeTab === 'enquiries' ? '🏪 Market' : '📬 Enquiries'}
@@ -506,6 +510,7 @@ export default function CattleMarket() {
       </div>
 
       <div className="page-content">
+        {/* ✅ Pass unseenChanges to QuickNav for sidebar badge */}
         <QuickNav cattleNotifications={unseenChanges} />
 
         {/* ===== MARKETPLACE TAB ===== */}
@@ -753,7 +758,6 @@ export default function CattleMarket() {
                           </td>
                           <td>
                             <div>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</div>
-                            {/* ✅ Show seller phone only when accepted */}
                             {eq.status === 'Accepted' && eq.cattle?.seller?.phone && (
                               <a href={`tel:${eq.cattle.seller.phone}`}
                                 style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.85rem' }}>
@@ -775,7 +779,6 @@ export default function CattleMarket() {
                             )}
                           </td>
                           <td>
-                            {/* ✅ Delete available on ALL statuses */}
                             <button className="btn btn-sm"
                               style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
                               onClick={() => handleDeleteSentEnquiry(eq._id)}>
