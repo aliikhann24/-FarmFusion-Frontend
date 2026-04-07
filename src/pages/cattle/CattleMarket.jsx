@@ -702,7 +702,8 @@ export default function CattleMarket() {
                           <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {eq.message || '—'}
                           </td>
-                          <td>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</td>
+                          <td><div>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</div>{eq.status === 'Accepted' && eq.cattle?.seller?.phone && (<a href={`tel:${eq.cattle.seller.phone}`}style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.85rem' }}>📞 {eq.cattle.seller.phone}</a>)}
+</td>
                           <td>
                             <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
                             {eq.status === 'Accepted' && (
