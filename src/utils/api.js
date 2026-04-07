@@ -15,14 +15,23 @@ API.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const token = localStorage.getItem('farmfusion_token');
-      const isAuthRoute = error.config.url.includes('/auth/login') ||
-                          error.config.url.includes('/auth/register');
+
+      // ✅ Don't logout on auth routes themselves
+      const isAuthRoute = error.config?.url?.includes('/auth/login') ||
+                          error.config?.url?.includes('/auth/register');
+
       // ✅ Don't logout on background polling routes
-      const isPollingRoute = error.config.url.includes('/enquiries/sent') ||
-                             error.config.url.includes('/enquiries/received');
-      if (token && !isAuthRoute && !isPollingRoute) {
+      const isPollingRoute = error.config?.url?.includes('/enquiries/sent') ||
+                             error.config?.url?.includes('/enquiries/received');
+
+      // ✅ Don't logout on the /auth/me validation call
+      // (AuthContext handles that itself)
+      const isGetMe = error.config?.url?.includes('/auth/me');
+
+      if (token && !isAuthRoute && !isPollingRoute && !isGetMe) {
         localStorage.removeItem('farmfusion_token');
         localStorage.removeItem('farmfusion_user');
+        localStorage.removeItem('farmfusion_enquiry_statuses');
         window.location.href = '/login';
       }
     }
@@ -96,7 +105,6 @@ export const enquiryAPI = {
   sent:       ()           => API.get('/enquiries/sent'),
   update:     (id, status) => API.patch(`/enquiries/${id}/status`, { status }),
   delete:     (id)         => API.delete(`/enquiries/${id}`),
-  // ✅ buyer deletes their own sent enquiry
   deleteSent: (id)         => API.delete(`/enquiries/sent/${id}`),
 };
 
