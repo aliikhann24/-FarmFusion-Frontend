@@ -112,10 +112,10 @@ export default function CattleMarket() {
             newChanges++;
             const animalName = eq.cattle?.name || (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'your animal');
             if (eq.status === 'Accepted') {
-              toast.success(
-                `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
-                { autoClose: 10000000000000000000000000000000000000000000000, toastId: `accepted-${eq._id}` }
-              );
+  toast.success(
+    `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
+    { autoClose: false, toastId: `accepted-${eq._id}` }
+  );
             } else if (eq.status === 'Rejected') {
               toast.error(
                 `❌ Your offer for ${animalName} was declined. Try another listing!`,
@@ -154,9 +154,10 @@ export default function CattleMarket() {
   useEffect(() => {
     if (activeTab === 'enquiries') loadEnquiries();
     if (activeTab === 'my-enquiries') {
-      loadSentEnquiries(true);
-      setUnseenChanges(0); // clear badge when user views the tab
-    }
+  loadSentEnquiries(true);
+  setUnseenChanges(0);
+  toast.dismiss();
+}
   }, [activeTab]); // eslint-disable-line
 
   const isMyListing = (c) => {
