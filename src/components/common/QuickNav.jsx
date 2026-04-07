@@ -14,8 +14,8 @@ const navLinks = [
   { to: '/profile',             icon: '👤', label: 'Profile'      },
 ];
 
-export default function QuickNav() {
-  const { pathname } = useLocation();
+export default function QuickNav({ cattleNotifications = 0 }) {
+    const { pathname } = useLocation();
 
   return (
     <Animate direction="down" duration={400}>
@@ -39,6 +39,7 @@ export default function QuickNav() {
             return (
               <Link key={link.to} to={link.to} style={{ textDecoration: 'none' }}>
                 <div style={{
+                  position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -52,6 +53,17 @@ export default function QuickNav() {
                   transition: 'all 0.18s',
                   cursor: 'pointer',
                 }}>
+                  {/* ✅ Notification badge on Market icon */}
+                  {link.to === '/cattle' && cattleNotifications > 0 && (
+                    <span style={{
+                      position: 'absolute', top: '-6px', right: '-4px',
+                      background: 'var(--danger)', color: 'white',
+                      borderRadius: '50%', width: '16px', height: '16px',
+                      fontSize: '0.55rem', fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+                    }}>{cattleNotifications}</span>
+                  )}
                   <span style={{ fontSize: '1rem', lineHeight: 1 }}>{link.icon}</span>
                   <span style={{
                     fontSize: '0.58rem',

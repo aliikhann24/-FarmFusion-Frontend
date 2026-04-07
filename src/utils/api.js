@@ -17,7 +17,10 @@ API.interceptors.response.use(
       const token = localStorage.getItem('farmfusion_token');
       const isAuthRoute = error.config.url.includes('/auth/login') ||
                           error.config.url.includes('/auth/register');
-      if (token && !isAuthRoute) {
+      // ✅ Don't logout on background polling routes
+      const isPollingRoute = error.config.url.includes('/enquiries/sent') ||
+                             error.config.url.includes('/enquiries/received');
+      if (token && !isAuthRoute && !isPollingRoute) {
         localStorage.removeItem('farmfusion_token');
         localStorage.removeItem('farmfusion_user');
         window.location.href = '/login';
