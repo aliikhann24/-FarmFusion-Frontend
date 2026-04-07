@@ -71,15 +71,19 @@ export default function CattleMarket() {
 
   // ✅ unseenChanges persists in localStorage per user
   const [unseenChanges, setUnseenChanges]       = useState(0);
+  // ✅ Persistent notification banners — stored in localStorage until user views My Offers
+  const [pendingNotifs, setPendingNotifs]       = useState([]);
 
-  const pollRef  = useRef(null);
-  const imageRef = useRef();
+  const pollRef    = useRef(null);
+  const seededRef  = useRef(false);   // ✅ prevents race: don't notify until seed is done
+  const imageRef   = useRef();
   const { confirm, confirmState, handleConfirm, handleCancel } = useConfirm();
 
   // ✅ Helper: get this user's localStorage key
   const getUid = () => user?.id || user?._id || 'guest';
   const statusKey  = () => `farmfusion_enquiry_statuses_${getUid()}`;
   const unseenKey  = () => `farmfusion_unseen_${getUid()}`;
+  const notifKey   = () => `farmfusion_notifs_${getUid()}`;
 
   useEffect(() => {
     if (user) {
@@ -88,6 +92,9 @@ export default function CattleMarket() {
       // ✅ Restore unseen count from localStorage on login/refresh
       const saved = parseInt(localStorage.getItem(unseenKey()) || '0', 10);
       setUnseenChanges(saved);
+      // ✅ Restore persistent notification banners from localStorage
+      const savedNotifs = JSON.parse(localStorage.getItem(notifKey()) || '[]');
+      setPendingNotifs(savedNotifs);
     }
   }, [user]); // eslint-disable-line
 
@@ -113,9 +120,11 @@ export default function CattleMarket() {
       const { data } = await enquiryAPI.sent();
       const fresh = data.enquiries || [];
 
-      if (notify) {
+      if (notify && seededRef.current) {
+        // ✅ Only notify AFTER seed is confirmed done (seededRef guards the race condition)
         const savedStatuses = JSON.parse(localStorage.getItem(statusKey()) || '{}');
         let newChanges = 0;
+        const newBanners = [];
 
         fresh.forEach(eq => {
           const prevStatus    = savedStatuses[eq._id];
@@ -126,17 +135,21 @@ export default function CattleMarket() {
             newChanges++;
             const animalName = eq.cattle?.name ||
               (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'your animal');
+            const bannerId = `${eq._id}-${currentStatus}`;
 
             if (currentStatus === 'Accepted') {
+              // ✅ Show toast AND add a persistent banner
               toast.success(
                 `🎉 Your offer for "${animalName}" was ACCEPTED! Contact the seller to finalize.`,
                 { autoClose: false, toastId: `accepted-${eq._id}` }
               );
+              newBanners.push({ id: bannerId, type: 'accepted', animalName });
             } else if (currentStatus === 'Rejected') {
               toast.error(
                 `❌ Your offer for "${animalName}" was declined. Try another listing!`,
                 { autoClose: false, toastId: `rejected-${eq._id}` }
               );
+              newBanners.push({ id: bannerId, type: 'rejected', animalName });
             }
           }
         });
@@ -145,6 +158,16 @@ export default function CattleMarket() {
         const newStatuses = {};
         fresh.forEach(eq => { newStatuses[eq._id] = eq.status; });
         localStorage.setItem(statusKey(), JSON.stringify(newStatuses));
+
+        // ✅ Merge new banners into localStorage so they survive refresh
+        if (newBanners.length > 0) {
+          const existingBanners = JSON.parse(localStorage.getItem(notifKey()) || '[]');
+          // Deduplicate by id
+          const merged = [...existingBanners];
+          newBanners.forEach(b => { if (!merged.find(x => x.id === b.id)) merged.push(b); });
+          localStorage.setItem(notifKey(), JSON.stringify(merged));
+          setPendingNotifs(merged);
+        }
 
         // ✅ Persist unseen count in localStorage so badge survives refresh
         if (newChanges > 0) {
@@ -155,7 +178,7 @@ export default function CattleMarket() {
           });
         }
 
-      } else {
+      } else if (!notify) {
         // notify=false: seed localStorage — only add NEW enquiries, never overwrite existing
         const existingSaved = JSON.parse(localStorage.getItem(statusKey()) || '{}');
         const merged = { ...existingSaved };
@@ -165,6 +188,8 @@ export default function CattleMarket() {
           }
         });
         localStorage.setItem(statusKey(), JSON.stringify(merged));
+        // ✅ Mark seed as done so subsequent notify=true calls are safe
+        seededRef.current = true;
       }
 
       setSentEnquiries(fresh);
@@ -177,9 +202,9 @@ export default function CattleMarket() {
 
   useEffect(() => {
     loadEnquiries();
-    // ✅ Seed first, then check for changes immediately, then poll
+    // ✅ Seed first (sets seededRef=true), THEN start polling — no race condition
     loadSentEnquiries(false).then(() => {
-      setTimeout(() => loadSentEnquiries(true), 500);
+      // seededRef.current is now true, safe to notify
       pollRef.current = setInterval(() => {
         loadEnquiries();
         loadSentEnquiries(true);
@@ -192,9 +217,11 @@ export default function CattleMarket() {
     if (activeTab === 'enquiries') loadEnquiries();
     if (activeTab === 'my-enquiries') {
       loadSentEnquiries(true);
-      // ✅ Clear badge from state AND localStorage when user opens My Offers
+      // ✅ Clear badge, banners from state AND localStorage when user opens My Offers
       setUnseenChanges(0);
+      setPendingNotifs([]);
       localStorage.setItem(unseenKey(), '0');
+      localStorage.setItem(notifKey(), '[]');
     }
   }, [activeTab]); // eslint-disable-line
 
@@ -512,6 +539,41 @@ export default function CattleMarket() {
       <div className="page-content">
         {/* ✅ Pass unseenChanges to QuickNav for sidebar badge */}
         <QuickNav cattleNotifications={unseenChanges} />
+
+        {/* ✅ Persistent notification banners — stay until user clicks My Offers */}
+        {pendingNotifs.length > 0 && activeTab !== 'my-enquiries' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+            {pendingNotifs.map(notif => (
+              <div key={notif.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '12px 18px',
+                background: notif.type === 'accepted' ? '#d4edda' : '#f8d7da',
+                border: `1px solid ${notif.type === 'accepted' ? '#c3e6cb' : '#f5c6cb'}`,
+                borderRadius: '10px',
+                color: notif.type === 'accepted' ? '#155724' : '#721c24',
+                fontWeight: 600, fontSize: '0.9rem',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.07)',
+                animation: 'fadeIn 0.3s ease'
+              }}>
+                <span>
+                  {notif.type === 'accepted'
+                    ? `🎉 Your offer for "${notif.animalName}" was ACCEPTED! Click My Offers to view details.`
+                    : `❌ Your offer for "${notif.animalName}" was declined.`}
+                </span>
+                <button
+                  onClick={() => setActiveTab('my-enquiries')}
+                  style={{
+                    marginLeft: '16px', padding: '5px 14px', borderRadius: '6px', border: 'none',
+                    background: notif.type === 'accepted' ? '#28a745' : '#dc3545',
+                    color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '0.82rem',
+                    whiteSpace: 'nowrap'
+                  }}>
+                  View My Offers →
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* ===== MARKETPLACE TAB ===== */}
         {activeTab === 'market' && (
