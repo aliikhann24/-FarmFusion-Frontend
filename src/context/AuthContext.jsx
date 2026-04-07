@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }) => {
       const uid = user.id || user._id;
       localStorage.removeItem(`farmfusion_enquiry_statuses_${uid}`);
       localStorage.removeItem(`farmfusion_unseen_${uid}`);
+      localStorage.removeItem(`farmfusion_notifs_${uid}`);
     }
     localStorage.removeItem('farmfusion_token');
     localStorage.removeItem('farmfusion_user');
