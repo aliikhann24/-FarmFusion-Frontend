@@ -112,10 +112,10 @@ export default function CattleMarket() {
             newChanges++;
             const animalName = eq.cattle?.name || (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'your animal');
             if (eq.status === 'Accepted') {
-  toast.success(
-    `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
-    { autoClose: false, toastId: `accepted-${eq._id}` }
-  );
+              toast.success(
+                `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
+                { autoClose: 10000, toastId: `accepted-${eq._id}` }
+              );
             } else if (eq.status === 'Rejected') {
               toast.error(
                 `❌ Your offer for ${animalName} was declined. Try another listing!`,
@@ -154,10 +154,9 @@ export default function CattleMarket() {
   useEffect(() => {
     if (activeTab === 'enquiries') loadEnquiries();
     if (activeTab === 'my-enquiries') {
-  loadSentEnquiries(true);
-  setUnseenChanges(0);
-  toast.dismiss();
-}
+      loadSentEnquiries(true);
+      setUnseenChanges(0); // clear badge when user views the tab
+    }
   }, [activeTab]); // eslint-disable-line
 
   const isMyListing = (c) => {
@@ -679,7 +678,7 @@ export default function CattleMarket() {
                     <thead>
                       <tr>
                         <th>Animal</th><th>My Offer</th><th>My Message</th>
-                        <th>Seller</th><th>Status</th><th>Action</th>
+                        
                       </tr>
                     </thead>
                     <tbody>
@@ -703,14 +702,7 @@ export default function CattleMarket() {
                           <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {eq.message || '—'}
                           </td>
-                          <td>
-                      
-  <div>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</div>
-  {eq.status === 'Accepted' && eq.cattle?.seller?.phone && (
-    <a href={`tel:${eq.cattle.seller.phone}`} style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.85rem', display: 'block', marginTop: '4px' }}>
-      📞 {eq.cattle.seller.phone}
-    </a>
-  )}
+                          <td><div>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</div>{eq.status === 'Accepted' && eq.cattle?.seller?.phone && (<a href={`tel:${eq.cattle.seller.phone}`}style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.85rem' }}>📞 {eq.cattle.seller.phone}</a>)}
 </td>
                           <td>
                             <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
