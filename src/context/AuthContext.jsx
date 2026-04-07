@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const { data } = await authAPI.login({ email, password });
     localStorage.setItem('farmfusion_token', data.token);
-    localStorage.setItem('farmfusion_user', JSON.stringify(data.user));
+    localStorage.setItem(`farmfusion_enquiry_statuses_${user?.id || user?._id}`, JSON.stringify())
     setUser(data.user);
     return data;
   };
@@ -32,18 +32,12 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const logout = () => {
-    // ✅ Remove this specific user's notification data on logout
-    if (user) {
-      const uid = user.id || user._id;
-      localStorage.removeItem(`farmfusion_enquiry_statuses_${uid}`);
-      localStorage.removeItem(`farmfusion_unseen_${uid}`);
-      localStorage.removeItem(`farmfusion_notifs_${uid}`);
-    }
-    localStorage.removeItem('farmfusion_token');
-    localStorage.removeItem('farmfusion_user');
-    setUser(null);
-  };
+ const logout = () => {
+  localStorage.removeItem('farmfusion_token');
+  localStorage.removeItem('farmfusion_user');
+  localStorage.getItem(`farmfusion_enquiry_statuses_${user?.id || user?._id}`) // ✅ clear on logout
+  setUser(null);
+};
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
