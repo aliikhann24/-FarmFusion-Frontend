@@ -678,7 +678,7 @@ export default function CattleMarket() {
                     <thead>
                       <tr>
                         <th>Animal</th><th>My Offer</th><th>My Message</th>
-                        <th>Seller</th><th>Status</th><th>Action</th>
+                        <th>Seller</th><th>Status</th><th>Seller no:</th><th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
