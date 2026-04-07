@@ -96,40 +96,38 @@ export default function CattleMarket() {
     } catch {}
   };
 
-  const loadSentEnquiries = async (notify = false) => {
-    try {
-      const { data } = await enquiryAPI.sent();
-      const fresh = data.enquiries || [];
+ const loadSentEnquiries = async (notify = false) => {
+  try {
+    const { data } = await enquiryAPI.sent();
+    const fresh = data.enquiries || [];
 
-      if (notify && prevSentRef.current.length > 0) {
-        fresh.forEach(eq => {
-          const prev = prevSentRef.current.find(p => p._id === eq._id);
-          if (prev && prev.status === 'Pending' && eq.status !== 'Pending') {
-            const animalName =
-              eq.cattle?.name ||
-              (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'Animal');
-
-            if (eq.status === 'Accepted') {
-              toast.success(
-                `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
-                { autoClose: 10000 }
-              );
-            } else if (eq.status === 'Rejected') {
-              toast.error(
-                `❌ Your offer for ${animalName} was declined. Try another listing!`,
-                { autoClose: 7000 }
-              );
-            }
+    // ✅ Notify buyer when seller accepts or rejects
+    if (notify && prevSentRef.current.length > 0) {
+      fresh.forEach(eq => {
+        const prev = prevSentRef.current.find(p => p._id === eq._id);
+        if (prev && prev.status === 'Pending' && eq.status !== 'Pending') {
+          const animalName = eq.cattle?.name || (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'your animal');
+          if (eq.status === 'Accepted') {
+            toast.success(
+              `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
+              { autoClose: 10000, toastId: `accepted-${eq._id}` }
+            );
+          } else if (eq.status === 'Rejected') {
+            toast.error(
+              `❌ Your offer for ${animalName} was declined. Try another listing!`,
+              { autoClose: 7000, toastId: `rejected-${eq._id}` }
+            );
           }
-        });
-      }
-
-      prevSentRef.current = fresh;
-      setSentEnquiries(fresh);
-    } catch (e) {
-      console.error('Failed to load sent enquiries:', e);
+        }
+      });
     }
-  };
+
+    prevSentRef.current = fresh;
+    setSentEnquiries(fresh);
+  } catch (e) {
+    console.error('Failed to load sent enquiries:', e);
+  }
+};
 
   useEffect(() => { load(); }, [search, filterSpecies]);
 
@@ -272,19 +270,19 @@ export default function CattleMarket() {
   };
 
   // NEW: buyer deletes their own sent enquiry
-  const handleDeleteSentEnquiry = async (id) => {
-    const ok = await confirm({
-      title: 'Remove Enquiry?',
-      message: 'This enquiry will be removed from your list.',
-      confirmText: 'Yes, Remove', type: 'warning'
-    });
-    if (!ok) return;
-    try {
-      await enquiryAPI.deleteSent(id);
-      toast.success('Enquiry removed');
-      loadSentEnquiries(false);
-    } catch { toast.error('Failed to remove enquiry'); }
-  };
+ const handleDeleteSentEnquiry = async (id) => {
+  const ok = await confirm({
+    title: 'Remove Enquiry?',
+    message: 'This enquiry will be removed from your list.',
+    confirmText: 'Yes, Remove', type: 'warning'
+  });
+  if (!ok) return;
+  try {
+    await enquiryAPI.deleteSent(id);
+    toast.success('Enquiry removed');
+    loadSentEnquiries(false);
+  } catch { toast.error('Failed to remove enquiry'); }
+};
 
   const handleChange     = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
   const statusMap        = { Pending: 'badge-orange', Accepted: 'badge-green', Rejected: 'badge-red' };
@@ -626,84 +624,88 @@ export default function CattleMarket() {
 
         {/* ===== BUYER SENT ENQUIRIES TAB ===== */}
         {activeTab === 'my-enquiries' && (
-          <Animate direction="up" delay={0}>
-            <div className="card">
-              <div className="card-header">
-                <h3>📋 My Sent Enquiries
-                  {pendingSent > 0 && (
-                    <span style={{ marginLeft: '8px', background: 'var(--warning)', color: 'white', borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem' }}>
-                      {pendingSent} pending
-                    </span>
-                  )}
-                </h3>
-                <button className="btn btn-outline btn-sm" onClick={() => loadSentEnquiries(false)}>🔄 Refresh</button>
-              </div>
-              {sentEnquiries.length === 0 ? (
-                <div className="empty-state" style={{ padding: '40px' }}>
-                  <div className="icon">📋</div>
-                  <h3>No enquiries sent yet</h3>
-                  <p>Browse the marketplace and send enquiries to sellers</p>
-                  <button className="btn btn-primary" onClick={() => setActiveTab('market')}>Browse Market</button>
-                </div>
-              ) : (
-                <div className="table-container">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Animal</th><th>My Offer</th><th>My Message</th><th>Seller</th><th>Status</th><th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {sentEnquiries.map(eq => (
-                        <tr key={eq._id} style={{ background: eq.status === 'Accepted' ? '#f0fff4' : eq.status === 'Rejected' ? '#fff5f5' : undefined }}>
-                          <td>
-                            <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                              {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
-                            </div>
-                          </td>
-                          <td>
-                            {eq.offerPrice
-                              ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
-                              : '—'}
-                          </td>
-                          <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {eq.message || '—'}
-                          </td>
-                          <td>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</td>
-                          <td>
-                            <div>
-                              <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
-                              {eq.status === 'Accepted' && (
-                                <div style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600, marginTop: '4px' }}>
-                                  🎉 Contact the seller!
-                                </div>
-                              )}
-                              {eq.status === 'Rejected' && (
-                                <div style={{ fontSize: '0.72rem', color: 'var(--danger)', marginTop: '4px' }}>
-                                  Try another listing
-                                </div>
-                              )}
-                            </div>
-                          </td>
-                          <td>
-                            {eq.status !== 'Pending' && (
-                              <button
-                                className="btn btn-sm"
-                                style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
-                                onClick={() => handleDeleteSentEnquiry(eq._id)}
-                              >🗑 Delete</button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </Animate>
-        )}
+  <Animate direction="up" delay={0}>
+    <div className="card">
+      <div className="card-header">
+        <h3>📋 My Sent Enquiries
+          {pendingSent > 0 && (
+            <span style={{ marginLeft: '8px', background: 'var(--warning)', color: 'white', borderRadius: '12px', padding: '2px 8px', fontSize: '0.75rem' }}>
+              {pendingSent} pending
+            </span>
+          )}
+        </h3>
+        <button className="btn btn-outline btn-sm" onClick={() => loadSentEnquiries(false)}>🔄 Refresh</button>
+      </div>
+      {sentEnquiries.length === 0 ? (
+        <div className="empty-state" style={{ padding: '40px' }}>
+          <div className="icon">📋</div>
+          <h3>No enquiries sent yet</h3>
+          <p>Browse the marketplace and send enquiries to sellers</p>
+          <button className="btn btn-primary" onClick={() => setActiveTab('market')}>Browse Market</button>
+        </div>
+      ) : (
+        <div className="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Animal</th><th>My Offer</th><th>My Message</th>
+                <th>Seller</th><th>Status</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sentEnquiries.map(eq => (
+                <tr key={eq._id} style={{
+                  background: eq.status === 'Accepted' ? '#f0fff4'
+                            : eq.status === 'Rejected' ? '#fff5f5'
+                            : undefined
+                }}>
+                  <td>
+                    <strong>{eq.cattle?.name || eq.cattle?.tagId || '—'}</strong>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {eq.cattle?.species} • PKR {Number(eq.cattle?.price || 0).toLocaleString()}
+                    </div>
+                  </td>
+                  <td>
+                    {eq.offerPrice
+                      ? <span style={{ fontWeight: 700, color: 'var(--primary)' }}>PKR {Number(eq.offerPrice).toLocaleString()}</span>
+                      : '—'}
+                  </td>
+                  <td style={{ maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {eq.message || '—'}
+                  </td>
+                  <td>{eq.cattle?.seller?.farmName || eq.cattle?.seller?.name || '—'}</td>
+                  <td>
+                    <span className={`badge ${statusMap[eq.status]}`}>{eq.status}</span>
+                    {eq.status === 'Accepted' && (
+                      <div style={{ fontSize: '0.72rem', color: 'var(--success)', fontWeight: 600, marginTop: '4px' }}>
+                        🎉 Contact the seller!
+                      </div>
+                    )}
+                    {eq.status === 'Rejected' && (
+                      <div style={{ fontSize: '0.72rem', color: 'var(--danger)', marginTop: '4px' }}>
+                        Try another listing
+                      </div>
+                    )}
+                  </td>
+                  <td>
+                    {/* ✅ Delete available on ALL statuses */}
+                    <button
+                      className="btn btn-sm"
+                      style={{ background: '#f5f5f5', color: '#555', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', fontWeight: 600, fontSize: '0.8rem' }}
+                      onClick={() => handleDeleteSentEnquiry(eq._id)}
+                    >
+                      🗑 Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  </Animate>
+)}
       </div>
 
       {/* ===== ANIMAL DETAIL MODAL ===== */}

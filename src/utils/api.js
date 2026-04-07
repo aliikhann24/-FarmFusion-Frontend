@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API = axios.create({ 
+const API = axios.create({
   baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5000/api'
 });
 
@@ -15,7 +15,7 @@ API.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const token = localStorage.getItem('farmfusion_token');
-      const isAuthRoute = error.config.url.includes('/auth/login') || 
+      const isAuthRoute = error.config.url.includes('/auth/login') ||
                           error.config.url.includes('/auth/register');
       if (token && !isAuthRoute) {
         localStorage.removeItem('farmfusion_token');
@@ -93,6 +93,7 @@ export const enquiryAPI = {
   sent:       ()           => API.get('/enquiries/sent'),
   update:     (id, status) => API.patch(`/enquiries/${id}/status`, { status }),
   delete:     (id)         => API.delete(`/enquiries/${id}`),
+  // ✅ buyer deletes their own sent enquiry
   deleteSent: (id)         => API.delete(`/enquiries/sent/${id}`),
 };
 
