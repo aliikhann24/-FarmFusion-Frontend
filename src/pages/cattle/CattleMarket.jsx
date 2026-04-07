@@ -111,17 +111,12 @@ export default function CattleMarket() {
           if (prev && prev.status !== eq.status) {
             newChanges++;
             const animalName = eq.cattle?.name || (eq.cattle?.tagId ? `Tag #${eq.cattle.tagId}` : 'your animal');
-            if (eq.status === 'Accepted') {
-              toast.success(
-                `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
-                { autoClose: 10000, toastId: `accepted-${eq._id}` }
-              );
-            } else if (eq.status === 'Rejected') {
-              toast.error(
-                `❌ Your offer for ${animalName} was declined. Try another listing!`,
-                { autoClose: 7000, toastId: `rejected-${eq._id}` }
-              );
-            }
+           if (eq.status === 'Accepted') {
+  toast.success(
+    `🎉 Your offer for ${animalName} was ACCEPTED! Contact the seller to finalize.`,
+    { autoClose: 10000, toastId: `accepted-${eq._id}` }
+  );
+}
           }
         });
         // ✅ Increment unseen badge
