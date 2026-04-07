@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import { enquiryAPI } from '../../utils/api';
@@ -9,7 +9,7 @@ const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '🏠' },
   ]},
   { section: 'My Farm', items: [
-    { path: '/my-animals',          label: 'My Animals',      icon: '🐄' },
+    { path: '/my-animals',          label: 'My Animals',       icon: '🐄' },
     { path: '/breeding-records',    label: 'Breeding Records', icon: '🧬' },
     { path: '/feeding-records',     label: 'Feeding Records',  icon: '🌾' },
     { path: '/animal-progress',     label: 'Animal Progress',  icon: '📈' },
@@ -29,14 +29,40 @@ const navItems = [
 
 export default function Layout() {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
+  const location  = useLocation();
   const [sidebarOpen, setSidebarOpen]           = useState(false);
   const [pendingEnquiries, setPendingEnquiries] = useState(0);
-  const prevCountRef  = useRef(0);
-  const pollRef       = useRef(null);
-  const isFirstLoad   = useRef(true);
+  // ✅ Buyer badge: unseen accepted/rejected offers — synced from localStorage
+  const [unseenOffers, setUnseenOffers]         = useState(0);
+  const prevCountRef = useRef(0);
+  const pollRef      = useRef(null);
+  const isFirstLoad  = useRef(true);
 
-  // ===== ENQUIRY POLLING =====
+  // ✅ Same key CattleMarket writes to
+  const getUid    = () => user?.id || user?._id || 'guest';
+  const unseenKey = () => `farmfusion_unseen_${getUid()}`;
+
+  // ✅ Read unseenOffers from localStorage on user change, and sync every 5s
+  useEffect(() => {
+    if (!user) return;
+    const read = () => {
+      const val = parseInt(localStorage.getItem(unseenKey()) || '0', 10);
+      setUnseenOffers(val);
+    };
+    read();
+    const syncInterval = setInterval(read, 5000);
+    return () => clearInterval(syncInterval);
+  }, [user]); // eslint-disable-line
+
+  // ✅ Clear buyer badge visually when user navigates to /cattle
+  useEffect(() => {
+    if (location.pathname === '/cattle') {
+      setUnseenOffers(0);
+    }
+  }, [location.pathname]);
+
+  // ===== SELLER ENQUIRY POLLING =====
   const checkEnquiries = async () => {
     try {
       const { data } = await enquiryAPI.received();
@@ -55,7 +81,7 @@ export default function Layout() {
     checkEnquiries();
     pollRef.current = setInterval(checkEnquiries, 30000);
     return () => clearInterval(pollRef.current);
-  }, []);
+  }, []); // eslint-disable-line
 
   const handleLogout = () => {
     logout();
@@ -65,6 +91,9 @@ export default function Layout() {
 
   const closeSidebar = () => setSidebarOpen(false);
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
+
+  // ✅ Combined: seller pending enquiries + buyer unseen offer updates
+  const totalCattleBadge = pendingEnquiries + unseenOffers;
 
   return (
     <div className="app-layout">
@@ -97,8 +126,8 @@ export default function Layout() {
                 >
                   <span>{item.icon}</span>
                   {item.label}
-                  {/* 🔴 Badge on Cattle Market */}
-                  {item.path === '/cattle' && pendingEnquiries > 0 && (
+                  {/* ✅ Combined badge: seller pending + buyer unseen */}
+                  {item.path === '/cattle' && totalCattleBadge > 0 && (
                     <span style={{
                       marginLeft: 'auto',
                       background: 'var(--danger)', color: 'white',
@@ -106,7 +135,7 @@ export default function Layout() {
                       fontSize: '0.7rem', fontWeight: 700,
                       minWidth: '20px', textAlign: 'center'
                     }}>
-                      {pendingEnquiries}
+                      {totalCattleBadge}
                     </span>
                   )}
                 </NavLink>
@@ -127,19 +156,19 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT — UNCHANGED ===== */}
+      {/* ===== MAIN CONTENT ===== */}
       <main className="main-content">
 
-        {/* Mobile topbar — INSIDE main-content, unchanged */}
+        {/* Mobile topbar */}
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
           <div className="mobile-logo">Farm<span>Fusion</span></div>
-          {/* 🔴 Bell with badge on mobile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button onClick={() => navigate('/cattle')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative', padding: '4px' }}>
               <span style={{ fontSize: '1.2rem' }}>📬</span>
-              {pendingEnquiries > 0 && (
+              {/* ✅ Combined badge on mobile bell icon */}
+              {totalCattleBadge > 0 && (
                 <span style={{
                   position: 'absolute', top: '-2px', right: '-2px',
                   background: 'var(--danger)', color: 'white',
@@ -147,7 +176,7 @@ export default function Layout() {
                   fontSize: '0.6rem', fontWeight: 700,
                   display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                  {pendingEnquiries}
+                  {totalCattleBadge}
                 </span>
               )}
             </button>
