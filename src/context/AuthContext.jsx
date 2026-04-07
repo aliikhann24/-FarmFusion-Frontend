@@ -32,11 +32,12 @@ export const AuthProvider = ({ children }) => {
     return data;
   };
 
-  const logout = () => {
-    localStorage.removeItem('farmfusion_token');
-    localStorage.removeItem('farmfusion_user');
-    setUser(null);
-  };
+ const logout = () => {
+  localStorage.removeItem('farmfusion_token');
+  localStorage.removeItem('farmfusion_user');
+  localStorage.removeItem('farmfusion_enquiry_statuses'); // ✅ clear on logout
+  setUser(null);
+};
 
   return (
     <AuthContext.Provider value={{ user, loading, login, register, logout }}>
