@@ -80,10 +80,17 @@ export default function Layout() {
       {/* ===== SIDEBAR ===== */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close" onClick={closeSidebar}>✕</button>
-        <div className="sidebar-logo">
+
+        {/* ✅ Clickable logo navigates to /dashboard */}
+        <div
+          className="sidebar-logo"
+          onClick={() => { navigate('/dashboard'); closeSidebar(); }}
+          style={{ cursor: 'pointer' }}
+        >
           <h1>Farm<span>Fusion</span></h1>
           <p>Smart Livestock Management</p>
         </div>
+
         <nav className="sidebar-nav">
           {navItems.map(section => (
             <div className="nav-section" key={section.section}>
@@ -127,13 +134,22 @@ export default function Layout() {
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT — UNCHANGED ===== */}
+      {/* ===== MAIN CONTENT ===== */}
       <main className="main-content">
 
-        {/* Mobile topbar — INSIDE main-content, unchanged */}
+        {/* Mobile topbar */}
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
-          <div className="mobile-logo">Farm<span>Fusion</span></div>
+
+          {/* ✅ Clickable mobile logo navigates to /dashboard */}
+          <div
+            className="mobile-logo"
+            onClick={() => navigate('/dashboard')}
+            style={{ cursor: 'pointer' }}
+          >
+            Farm<span>Fusion</span>
+          </div>
+
           {/* 🔴 Bell with badge on mobile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <button onClick={() => navigate('/cattle')}
