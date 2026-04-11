@@ -81,7 +81,7 @@ export default function Layout() {
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close" onClick={closeSidebar}>✕</button>
 
-        {/* ✅ Clickable logo navigates to /dashboard */}
+        {/* Clickable logo navigates to /dashboard */}
         <div
           className="sidebar-logo"
           onClick={() => { navigate('/dashboard'); closeSidebar(); }}
@@ -121,15 +121,24 @@ export default function Layout() {
             </div>
           ))}
         </nav>
-        <div className="sidebar-user">
+
+        {/* ✅ Clickable user section navigates to /profile */}
+        <div
+          className="sidebar-user"
+          onClick={() => { navigate('/profile'); closeSidebar(); }}
+          style={{ cursor: 'pointer' }}
+        >
           <div className="user-avatar">{initials}</div>
           <div className="user-info">
             <div className="name">{user?.name}</div>
             <div className="email">{user?.email}</div>
           </div>
-          <button onClick={handleLogout}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleLogout(); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem' }}
-            title="Logout">🚪
+            title="Logout"
+          >
+            🚪
           </button>
         </div>
       </aside>
@@ -141,7 +150,7 @@ export default function Layout() {
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
 
-          {/* ✅ Clickable mobile logo navigates to /dashboard */}
+          {/* Clickable mobile logo navigates to /dashboard */}
           <div
             className="mobile-logo"
             onClick={() => navigate('/dashboard')}
@@ -167,7 +176,12 @@ export default function Layout() {
                 </span>
               )}
             </button>
-            <div className="user-avatar" style={{ width: '32px', height: '32px', fontSize: '0.75rem' }}>
+            {/* ✅ Clickable avatar on mobile navigates to /profile */}
+            <div
+              className="user-avatar"
+              onClick={() => navigate('/profile')}
+              style={{ width: '32px', height: '32px', fontSize: '0.75rem', cursor: 'pointer' }}
+            >
               {initials}
             </div>
           </div>
