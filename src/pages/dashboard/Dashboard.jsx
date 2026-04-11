@@ -651,7 +651,7 @@ export default function Dashboard() {
           <div className="card" style={{ marginBottom:16 }}>
             <div style={{ padding:'16px 18px' }}>
               {/* ← /cattle-market route */}
-              <SectionHeader icon="🏪" title="Cattle Market" to="/cattle-market"
+              <SectionHeader icon="🏪" title="Cattle Market" to="/cattle"
                 linkLabel={`View Market →${pendingEnq ? ` 🔴${pendingEnq}` : ''}`}
               />
               {/* summary pills */}
