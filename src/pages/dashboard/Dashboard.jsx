@@ -116,53 +116,56 @@ export default function Dashboard() {
         {/* Charts Row 1 — left + right */}
         <div className="charts-grid">
           <Animate direction="left">
-            <div className="card">
-              <div className="card-header"><h3>🐄 Animals by Species</h3></div>
-              <div className="card-body">
-                {loading ? <Spinner text="Loading chart..." /> : speciesData.length === 0 ? (
-                  <div className="empty-state" style={{ padding: '30px' }}><p>No animals to display</p></div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={240}>
-                    <PieChart>
-                      <Pie data={speciesData} cx="50%" cy="50%" outerRadius={80} dataKey="value"
-                        label={({ name, value }) => `${name}: ${value}`}>
-                        {speciesData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Tooltip /><Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-          </Animate>
+  <div className="card">
+    <div className="card-header"><h3>🐄 Animals by Species</h3></div>
+    <div className="card-body">
+      {loading ? <Spinner text="Loading chart..." /> : speciesData.length === 0 ? (
+        <div className="empty-state" style={{ padding: '30px' }}><p>No animals to display</p></div>
+      ) : (
+        <>
+          <ResponsiveContainer width="100%" height={260}>
+            <PieChart>
+              <Pie
+                data={speciesData}
+                cx="50%"
+                cy="50%"
+                innerRadius={55}
+                outerRadius={95}
+                dataKey="value"
+                paddingAngle={3}
+              >
+                {speciesData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value, name) => [value, name]} />
+            </PieChart>
+          </ResponsiveContainer>
 
-          <Animate direction="right">
-            <div className="card">
-              <div className="card-header"><h3>💚 Animal Health Status</h3></div>
-              <div className="card-body">
-                {loading ? <Spinner text="Loading chart..." /> : (
-                  <ResponsiveContainer width="100%" height={240}>
-                    <BarChart data={healthData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip />
-                      <Bar dataKey="value" name="Animals" radius={[4, 4, 0, 0]}>
-                        {healthData.map((entry, i) => (
-                          <Cell key={i} fill={
-                            entry.name === 'Healthy'  ? '#52b788' :
-                            entry.name === 'Sick'     ? '#e63946' :
-                            entry.name === 'Pregnant' ? '#a855f7' :
-                            entry.name === 'Sold'     ? '#94a3b8' : '#64748b'
-                          } />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-          </Animate>
+          {/* Custom legend — no text clipping */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '8px 16px',
+            justifyContent: 'center',
+            marginTop: '10px',
+          }}>
+            {speciesData.map((entry, i) => {
+              const total = speciesData.reduce((s, d) => s + d.value, 0);
+              const pct = Math.round((entry.value / total) * 100);
+              return (
+                <span key={entry.name} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: 2, background: COLORS[i % COLORS.length], flexShrink: 0 }} />
+                  {entry.name}: {entry.value} ({pct}%)
+                </span>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  </div>
+</Animate>
         </div>
 
         {/* Charts Row 2 — left + right with delay */}
