@@ -32,9 +32,9 @@ export default function Layout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen]           = useState(false);
   const [pendingEnquiries, setPendingEnquiries] = useState(0);
-  const prevCountRef  = useRef(0);
-  const pollRef       = useRef(null);
-  const isFirstLoad   = useRef(true);
+  const prevCountRef = useRef(0);
+  const pollRef      = useRef(null);
+  const isFirstLoad  = useRef(true);
 
   // ===== ENQUIRY POLLING =====
   const checkEnquiries = async () => {
@@ -64,24 +64,34 @@ export default function Layout() {
   };
 
   const closeSidebar = () => setSidebarOpen(false);
-  const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'FF';
+
+  // ===== SAFE USER DISPLAY =====
+  // Handles all possible field name variations from backend
+  const displayName  = user?.name  || user?.fullName  || user?.username || '';
+  const displayEmail = user?.email || user?.emailAddress || '';
+  const initials = displayName
+    ? displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+    : 'FF';
 
   return (
     <div className="app-layout">
 
       {/* ===== OVERLAY ===== */}
       {sidebarOpen && (
-        <div onClick={closeSidebar} style={{
-          position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.5)', zIndex: 199
-        }} />
+        <div
+          onClick={closeSidebar}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.5)', zIndex: 199
+          }}
+        />
       )}
 
       {/* ===== SIDEBAR ===== */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close" onClick={closeSidebar}>✕</button>
 
-        {/* Clickable logo navigates to /dashboard */}
+        {/* Clickable logo → /dashboard */}
         <div
           className="sidebar-logo"
           onClick={() => { navigate('/dashboard'); closeSidebar(); }}
@@ -122,7 +132,7 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* ✅ Clickable user section navigates to /profile */}
+        {/* Clickable user section → /profile */}
         <div
           className="sidebar-user"
           onClick={() => { navigate('/profile'); closeSidebar(); }}
@@ -130,12 +140,16 @@ export default function Layout() {
         >
           <div className="user-avatar">{initials}</div>
           <div className="user-info">
-            <div className="name">{user?.name}</div>
-            <div className="email">{user?.email}</div>
+            <div className="name">{displayName || 'My Account'}</div>
+            <div className="email">{displayEmail || 'No email found'}</div>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); handleLogout(); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem' }}
+            style={{
+              background: 'none', border: 'none',
+              cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
+              fontSize: '1.1rem'
+            }}
             title="Logout"
           >
             🚪
@@ -150,7 +164,7 @@ export default function Layout() {
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
 
-          {/* Clickable mobile logo navigates to /dashboard */}
+          {/* Clickable mobile logo → /dashboard */}
           <div
             className="mobile-logo"
             onClick={() => navigate('/dashboard')}
@@ -159,10 +173,16 @@ export default function Layout() {
             Farm<span>Fusion</span>
           </div>
 
-          {/* 🔴 Bell with badge on mobile */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button onClick={() => navigate('/cattle')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', position: 'relative', padding: '4px' }}>
+
+            {/* 🔴 Bell with badge */}
+            <button
+              onClick={() => navigate('/cattle')}
+              style={{
+                background: 'none', border: 'none',
+                cursor: 'pointer', position: 'relative', padding: '4px'
+              }}
+            >
               <span style={{ fontSize: '1.2rem' }}>📬</span>
               {pendingEnquiries > 0 && (
                 <span style={{
@@ -176,14 +196,17 @@ export default function Layout() {
                 </span>
               )}
             </button>
-            {/* ✅ Clickable avatar on mobile navigates to /profile */}
+
+            {/* Clickable avatar → /profile */}
             <div
               className="user-avatar"
               onClick={() => navigate('/profile')}
               style={{ width: '32px', height: '32px', fontSize: '0.75rem', cursor: 'pointer' }}
+              title={displayName || 'My Profile'}
             >
               {initials}
             </div>
+
           </div>
         </div>
 
