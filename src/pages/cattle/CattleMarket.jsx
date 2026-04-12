@@ -351,17 +351,17 @@ export default function CattleMarket() {
   // ===== ANIMAL DETAIL MODAL =====
   const AnimalDetailModal = ({ animal, onClose }) => (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+      <div className="modal" style={{ maxWidth: '600px' }} onClick={e => e.stopPropagation()}>
         <div className="modal-header">
           <h3>🐄 {animal.name || `${animal.species} #${animal.tagId}`}</h3>
           <button className="modal-close" onClick={onClose}>✕</button>
         </div>
-        <div className="modal-body" style={{ padding: 0, overflowY: 'auto' }}>
+        <div className="modal-body" style={{ padding: 0 }}>
           {animal.imageBase64 ? (
             <img
               src={`data:${animal.imageMimeType || 'image/jpeg'};base64,${animal.imageBase64}`}
               alt={animal.name || animal.species}
-              style={{ width: '100%', height: '240px', maxHeight: '35vh', objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }}
             />
           ) : (
             <div style={{
@@ -546,7 +546,7 @@ export default function CattleMarket() {
                         <img
                           src={`data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}`}
                           alt={c.name || c.species}
-                          style={{ width: '100%', height: '180px', objectFit: 'cover', objectPosition: 'center top', display: 'block' }}
+                          style={{ width: '100%', height: '190px', objectFit: 'cover', display: 'block' }}
                         />
                       ) : (
                         <div style={{
@@ -911,7 +911,7 @@ export default function CattleMarket() {
                 <img
                   src={`data:${showEnquiryModal.imageMimeType || 'image/jpeg'};base64,${showEnquiryModal.imageBase64}`}
                   alt="animal"
-                  style={{ width: '100%', height: '160px', maxHeight: '25vh', objectFit: 'cover', objectPosition: 'center', borderRadius: '10px', marginBottom: '16px' }}
+                  style={{ width: '100%', height: '160px', objectFit: 'cover', borderRadius: '10px', marginBottom: '16px' }}
                 />
               )}
               <div style={{ background: '#f4faf5', borderRadius: '10px', padding: '14px', marginBottom: '20px' }}>
