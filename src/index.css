@@ -321,13 +321,14 @@ tbody tr:nth-child(even):hover td { background: #f4faf5; }
   z-index: 9999; padding: 20px;
   animation: fadeIn 0.15s ease;
 }
-.modal {
-  background: white; border-radius: var(--radius-lg);
-  width: 100%; max-width: 520px; max-height: 88vh;
-  overflow-y: auto;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-  animation: slideUp 0.2s ease;
-  position: relative; margin: 0 auto;
+/* ===== ANIMAL DETAIL MODAL IMAGE FIX ===== */
+.modal .animal-detail-img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  object-position: center top;
+  display: block;
+  flex-shrink: 0;
 }
 .modal-header {
   padding: 20px 24px 16px;
