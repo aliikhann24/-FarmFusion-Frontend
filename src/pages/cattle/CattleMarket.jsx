@@ -544,10 +544,10 @@ export default function CattleMarket() {
                     >
                       {c.imageBase64 ? (
                         <img
-  src={`data:${animal.imageMimeType || 'image/jpeg'};base64,${animal.imageBase64}`}
-  alt={animal.name || animal.species}
-  className="animal-detail-img"
-/>
+                          src={`data:${c.imageMimeType || 'image/jpeg'};base64,${c.imageBase64}`}
+                          alt={c.name || c.species}
+                          style={{ width: '100%', height: '190px', objectFit: 'cover', display: 'block' }}
+                        />
                       ) : (
                         <div style={{
                           width: '100%', height: '130px',
