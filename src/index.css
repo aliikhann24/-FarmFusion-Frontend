@@ -878,3 +878,90 @@ tbody tr:nth-child(10) { animation-delay: 0.50s; }
   .stat-info .value { font-size: 1.4rem; }
   .stat-info .label { font-size: 0.72rem; }
 }
+/* ===== SIDEBAR USER FOOTER ===== */
+.sidebar-user-footer {
+  margin: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.sidebar-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sidebar-user-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sidebar-user-row .user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-user-row .name {
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-user-row .email {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ===== LOGOUT BUTTON ===== */
+.sidebar-logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  padding: 9px 12px;
+  background: rgba(239, 68, 68, 0.07);
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  color: #f87171;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+.sidebar-logout-btn:active {
+  background: rgba(239, 68, 68, 0.25);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .sidebar-user-footer {
+    margin: 6px;
+  }
+
+  .sidebar-user-row {
+    padding: 9px 10px;
+  }
+
+  .sidebar-logout-btn {
+    padding: 10px 12px;   /* slightly taller tap target on mobile */
+    font-size: 0.8rem;
+  }
+}

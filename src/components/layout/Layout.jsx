@@ -36,7 +36,6 @@ export default function Layout() {
   const pollRef      = useRef(null);
   const isFirstLoad  = useRef(true);
 
-  // ===== ENQUIRY POLLING =====
   const checkEnquiries = async () => {
     try {
       const { data } = await enquiryAPI.received();
@@ -65,8 +64,6 @@ export default function Layout() {
 
   const closeSidebar = () => setSidebarOpen(false);
 
-  // ===== SAFE USER DISPLAY =====
-  // Handles all possible field name variations from backend
   const displayName  = user?.name  || user?.fullName  || user?.username || '';
   const displayEmail = user?.email || user?.emailAddress || '';
   const initials = displayName
@@ -76,7 +73,7 @@ export default function Layout() {
   return (
     <div className="app-layout">
 
-      {/* ===== OVERLAY ===== */}
+      {/* OVERLAY */}
       {sidebarOpen && (
         <div
           onClick={closeSidebar}
@@ -87,11 +84,10 @@ export default function Layout() {
         />
       )}
 
-      {/* ===== SIDEBAR ===== */}
+      {/* SIDEBAR */}
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <button className="sidebar-close" onClick={closeSidebar}>✕</button>
 
-        {/* Clickable logo → /dashboard */}
         <div
           className="sidebar-logo"
           onClick={() => { navigate('/dashboard'); closeSidebar(); }}
@@ -114,7 +110,6 @@ export default function Layout() {
                 >
                   <span>{item.icon}</span>
                   {item.label}
-                  {/* 🔴 Badge on Cattle Market */}
                   {item.path === '/cattle' && pendingEnquiries > 0 && (
                     <span style={{
                       marginLeft: 'auto',
@@ -132,39 +127,47 @@ export default function Layout() {
           ))}
         </nav>
 
-        {/* Clickable user section → /profile */}
-        <div
-          className="sidebar-user"
-          onClick={() => { navigate('/profile'); closeSidebar(); }}
-          style={{ cursor: 'pointer' }}
-        >
-          <div className="user-avatar">{initials}</div>
-          <div className="user-info">
-            <div className="name">{displayName || 'My Account'}</div>
-            <div className="email">{displayEmail || 'No email found'}</div>
-          </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); handleLogout(); }}
-            style={{
-              background: 'none', border: 'none',
-              cursor: 'pointer', color: 'rgba(255,255,255,0.5)',
-              fontSize: '1.1rem'
-            }}
-            title="Logout"
+        {/* ✅ IMPROVED USER + LOGOUT SECTION */}
+        <div className="sidebar-user-footer">
+
+          {/* Clickable user row → /profile */}
+          <div
+            className="sidebar-user-row"
+            onClick={() => { navigate('/profile'); closeSidebar(); }}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && navigate('/profile')}
           >
-            🚪
+            <div className="user-avatar">{initials}</div>
+            <div className="user-info">
+              <div className="name">{displayName || 'My Account'}</div>
+              <div className="email">{displayEmail || 'No email found'}</div>
+            </div>
+          </div>
+
+          {/* Dedicated logout button — full width, clearly labelled */}
+          <button
+            className="sidebar-logout-btn"
+            onClick={handleLogout}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Sign out
           </button>
+
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT ===== */}
+      {/* MAIN CONTENT */}
       <main className="main-content">
 
         {/* Mobile topbar */}
         <div className="mobile-topbar">
           <button className="hamburger" onClick={() => setSidebarOpen(true)}>☰</button>
 
-          {/* Clickable mobile logo → /dashboard */}
           <div
             className="mobile-logo"
             onClick={() => navigate('/dashboard')}
@@ -175,7 +178,7 @@ export default function Layout() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-            {/* 🔴 Bell with badge */}
+            {/* Enquiry bell */}
             <button
               onClick={() => navigate('/cattle')}
               style={{
@@ -197,7 +200,7 @@ export default function Layout() {
               )}
             </button>
 
-            {/* Clickable avatar → /profile */}
+            {/* Avatar → /profile */}
             <div
               className="user-avatar"
               onClick={() => navigate('/profile')}
