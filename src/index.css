@@ -933,7 +933,7 @@ tbody tr:nth-child(10) { animation-delay: 0.50s; }
   background: rgba(239, 68, 68, 0.07);
   border: none;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
-  color: #f87171;
+  color: gray;
   font-size: 0.78rem;
   font-weight: 500;
   letter-spacing: 0.01em;
@@ -943,7 +943,7 @@ tbody tr:nth-child(10) { animation-delay: 0.50s; }
 
 .sidebar-logout-btn:hover {
   background: rgba(239, 68, 68, 0.18);
-  color: #fca5a5;
+  color: green;
 }
 
 .sidebar-logout-btn:active {
