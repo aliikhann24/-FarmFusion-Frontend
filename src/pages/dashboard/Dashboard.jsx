@@ -685,7 +685,7 @@ export default function Dashboard() {
                       >
                         {c.imageBase64
                           ? <img src={`data:${c.imageMimeType};base64,${c.imageBase64}`} alt={c.name}
-                              style={{ width:'100%', height:120, objectFit:'cover', display:'block' }}/>
+                              style={{ width:'100%', height:180, objectFit:'cover', objectPosition:'center top', display:'block' }}/>
                           : <div style={{ width:'100%', height:120, background:'#f0f7f2', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'2.5rem' }}>🐄</div>
                         }
                         <div style={{ padding:'10px 12px' }}>
