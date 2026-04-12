@@ -964,3 +964,14 @@ tbody tr:nth-child(10) { animation-delay: 0.50s; }
     font-size: 0.8rem;
   }
 }
+.dash-cattle-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media (max-width: 768px) {
+  .dash-cattle-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .dash-cattle-grid { grid-template-columns: 1fr; }
+}
