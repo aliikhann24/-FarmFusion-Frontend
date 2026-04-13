@@ -361,7 +361,7 @@ export default function CattleMarket() {
             <img
               src={`data:${animal.imageMimeType || 'image/jpeg'};base64,${animal.imageBase64}`}
               alt={animal.name || animal.species}
-              style={{ width: '100%', height: '260px', objectFit: 'cover', display: 'block' }}
+              style={{ width: '100%', height: '340px', objectFit: 'contain', background: '#f0f0f0', display: 'block' }}
             />
           ) : (
             <div style={{
