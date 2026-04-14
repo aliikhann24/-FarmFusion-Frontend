@@ -74,19 +74,19 @@ export default function Register() {
             <div className="form-row">
               <div className="form-group">
                 <label>Full Name *</label>
-                <input type="text" name="name" placeholder="Ahmed Khan"
+                <input type="text" name="name" placeholder="Full Name"
                   value={form.name} onChange={handleChange} required />
               </div>
               <div className="form-group">
                 <label>Farm Name</label>
-                <input type="text" name="farmName" placeholder="Valley Farm"
+                <input type="text" name="farmName" placeholder="Farm Name"
                   value={form.farmName} onChange={handleChange} />
               </div>
             </div>
 
             <div className="form-group">
               <label>Email Address *</label>
-              <input type="email" name="email" placeholder="ahmed@farm.com"
+              <input type="email" name="email" placeholder="you@example.com"
                 value={form.email} onChange={handleChange} required />
             </div>
 
