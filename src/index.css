@@ -949,7 +949,7 @@ tbody tr:nth-child(10) { animation-delay: 0.50s; }
   background: rgba(255, 255, 255, 0.12);
 }
 .sidebar-logout-btn svg {
-  color: red;
+  color: white;
   flex-shrink: 0;
 }
 /* ===== RESPONSIVE ===== */
