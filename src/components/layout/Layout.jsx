@@ -94,7 +94,7 @@ export default function Layout() {
           style={{ cursor: 'pointer' }}
         >
           <h1>Farm<span>Fusion</span></h1>
-          <p>Smart Livestock Management</p>
+          <p style={{ color: 'white' }}>Smart Livestock Management</p>
         </div>
 
         <nav className="sidebar-nav">
