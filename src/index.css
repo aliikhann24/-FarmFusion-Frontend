@@ -142,7 +142,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--primary-light);
 .sidebar-nav { flex: 1; padding: 16px 12px; }
 .nav-section { margin-bottom: 24px; }
 .nav-section-title {
-  color: rgba(255,255,255,0.4); font-size: 0.7rem;
+  color: white;
   font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
   padding: 0 8px; margin-bottom: 8px;
 }
